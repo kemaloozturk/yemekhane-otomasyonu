@@ -118,7 +118,7 @@ services:
   frontend:
     build: ./apache
     restart: unless-stopped
-    command: ["httpd-foreground", "-D", "WEBAPI"]
+    command: ["httpd-foreground", "-D", "MVC"]
     environment:
       # Uygulamanızın container içinde dinlediği adres. Port farklıysa burayı değiştirin.
       UYGULAMA_ADRES: http://uygulama:8000
@@ -138,18 +138,18 @@ services:
   # 2. Uygulama container içinde 8000 portunu dinlesin (ya da UYGULAMA_ADRES'i değiştirin).
   # 3. Aşağıdaki satırların başındaki "# " işaretlerini kaldırın.
   # ---------------------------------------------------------------
-  # uygulama:
-  #   build: ./uygulama
-  #   restart: unless-stopped
-  #   environment:
-  #     <<: *uygulama-ortam
-  #   depends_on:
-  #     mysql-primary:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-  #     replica-setup:
-  #       condition: service_completed_successfully
+  uygulama:
+    build: ./uygulama
+    restart: unless-stopped
+    environment:
+      <<: *uygulama-ortam
+    depends_on:
+      mysql-primary:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      replica-setup:
+        condition: service_completed_successfully
 
 volumes:
   mysql-primary-veri:
