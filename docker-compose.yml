@@ -143,6 +143,8 @@ services:
     restart: unless-stopped
     environment:
       <<: *uygulama-ortam
+    volumes:
+      - ./uygulama/src:/app/src
     depends_on:
       mysql-primary:
         condition: service_healthy

@@ -1,0 +1,139 @@
+<%- include('../partials/header', { baslik: 'Günün Menüsü' }) %>
+
+<div class="filtre-cubugu">
+  <form action="/menu/gunun" method="GET" style="display: contents;">
+    <div>
+      <label for="yemekhane_id">Yemekhane</label>
+      <select id="yemekhane_id" name="yemekhane_id" onchange="this.form.submit()">
+        <% yemekhaneler.forEach(y => { %>
+          <option value="<%= y.id %>" <%= Number(secilenYemekhaneId) === Number(y.id) ? 'selected' : '' %>>
+            <%= y.ad %> (Kapasite: <%= y.kapasite %>)
+          </option>
+        <% }); %>
+      </select>
+    </div>
+
+    <div>
+      <label for="tarih">Tarih</label>
+      <input type="date" id="tarih" name="tarih" value="<%= secilenTarih %>" onchange="this.form.submit()">
+    </div>
+
+    <div>
+      <label for="ogun_id">Öğün</label>
+      <select id="ogun_id" name="ogun_id" onchange="this.form.submit()">
+        <% ogunler.forEach(o => { %>
+          <option value="<%= o.id %>" <%= Number(secilenOgunId) === Number(o.id) ? 'selected' : '' %>>
+            <%= o.ad %> (Son Saat: <%= o.son_saat.slice(0,5) %>)
+          </option>
+        <% }); %>
+      </select>
+    </div>
+
+    <div>
+      <noscript><button type="submit" class="dugme" style="width: 100%;">Filtrele</button></noscript>
+    </div>
+  </form>
+</div>
+
+<% if (menu) { %>
+  <div class="kart">
+    <div class="kart-baslik">
+      <div>
+        <h2 style="margin: 0; font-size: 1.3rem;"><%= menu.yemekhane %> · <%= menu.ogun %> Menüsü</h2>
+        <small style="color: var(--metin-soluk);"><%= menu.tarih %></small>
+      </div>
+      <div>
+        <% if (menu.vejetaryen) { %>
+          <span class="rozet rozet-vejetaryen">🌱 Vejetaryen Menü</span>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="istatistik-grid">
+      <div class="istatistik-kutu">
+        <span class="sayi"><%= menu.toplamKalori %></span>
+        <span class="etiket">Toplam Kalori (kcal)</span>
+      </div>
+      <div class="istatistik-kutu">
+        <span class="sayi"><%= menu.bos_yer %> / <%= menu.kapasite %></span>
+        <span class="etiket">Kalan Boş Kontenjan</span>
+      </div>
+      <div class="istatistik-kutu">
+        <span class="sayi">₺<%= menu.ogrenci_fiyati.toFixed(2) %> / ₺<%= menu.personel_fiyati.toFixed(2) %></span>
+        <span class="etiket">Öğrenci / Personel</span>
+      </div>
+      <div class="istatistik-kutu">
+        <span class="sayi">
+          <%= menu.ortalama_puan ? '★ ' + menu.ortalama_puan.toFixed(1) : '—' %>
+        </span>
+        <span class="etiket"><%= menu.oy_sayisi %> Değerlendirme</span>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 1.5rem; margin-bottom: 0.5rem; font-size: 1.1rem;">Menüdeki Yemekler</h3>
+    <ul class="yemek-listesi">
+      <% menu.yemekler.forEach(y => { %>
+        <li class="yemek-ogesi">
+          <div class="yemek-bilgi">
+            <strong><%= y.ad %></strong>
+            <span class="yemek-kategori"><%= y.kategori %></span>
+            <% if (y.vejetaryen) { %>
+              <span class="rozet rozet-vejetaryen" style="margin-left: 0.3rem;">Vejetaryen</span>
+            <% } %>
+            <% if (y.alerjenler && y.alerjenler.length > 0) { %>
+              <span class="rozet rozet-alerjen" style="margin-left: 0.3rem;">Alerjen: <%= y.alerjenler.join(', ') %></span>
+            <% } %>
+            <% if (typeof kullaniciAlerjenleri !== 'undefined' && y.alerjen_idler && y.alerjen_idler.some(id => kullaniciAlerjenleri.includes(id))) { %>
+              <span class="rozet rozet-iptal" style="margin-left: 0.3rem; font-weight: bold;">⚠️ Profilinizdeki Alerjen İçeriği!</span>
+            <% } %>
+          </div>
+          <div class="yemek-kalori">
+            <%= y.kalori %> kcal
+          </div>
+        </li>
+      <% }); %>
+    </ul>
+
+    <% if (menu.alerjenler && menu.alerjenler.length > 0) { %>
+      <div style="margin-top: 1rem; padding: 0.75rem; background: var(--zemin); border-radius: var(--kose); font-size: 0.85rem;">
+        <strong>Menüdeki Genel Alerjenler:</strong> <%= menu.alerjenler.join(', ') %>
+      </div>
+    <% } %>
+
+    <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+      <% if (locals.kullanici) { %>
+        <% if (kullaniciRezervasyonu) { %>
+          <div class="bildirim bildirim-basari" style="flex: 1; margin: 0;">
+            Bu menü için <strong><%= kullaniciRezervasyonu.toUpperCase() %></strong> rezervasyonunuz bulunmaktadır.
+          </div>
+          <a href="/rezervasyonlarim" class="dugme dugme-ikincil">Rezervasyonlarıma Git</a>
+        <% } else { %>
+          <form action="/rezervasyon/yap" method="POST" style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; width: 100%;">
+            <input type="hidden" name="menu_id" value="<%= menu.id %>">
+            <input type="hidden" name="donus_url" value="/menu/gunun?yemekhane_id=<%= secilenYemekhaneId %>&tarih=<%= secilenTarih %>&ogun_id=<%= secilenOgunId %>">
+
+            <% const sureGecti = new Date() >= new Date(menu.rezervasyon_son); %>
+            <% if (sureGecti) { %>
+              <button type="button" class="dugme" disabled aria-disabled="true">Rezervasyon Süresi Doldu (<%= menu.rezervasyon_son %>)</button>
+            <% } else if (menu.bos_yer <= 0) { %>
+              <button type="button" class="dugme" disabled aria-disabled="true">Kapasite Dolu</button>
+            <% } else { %>
+              <button type="submit" class="dugme">
+                Rezervasyon Yap (₺<%= (locals.kullanici.rol === 'ogrenci' ? menu.ogrenci_fiyati : menu.personel_fiyati).toFixed(2) %>)
+              </button>
+            <% } %>
+          </form>
+        <% } %>
+      <% } else { %>
+        <a href="/giris" class="dugme" style="width: 100%; text-align: center;">Rezervasyon Yapmak İçin Giriş Yapın</a>
+      <% } %>
+    </div>
+  </div>
+<% } else { %>
+  <div class="kart" style="text-align: center; padding: 2rem;">
+    <p style="font-size: 1.1rem; color: var(--metin-soluk);">Seçilen tarih ve öğün için henüz menü planlanmamış.</p>
+    <a href="/menu/haftalik?yemekhane_id=<%= secilenYemekhaneId %>" class="dugme">Haftalık Menüye Göz At</a>
+  </div>
+<% } %>
+
+<%- include('../partials/footer') %>

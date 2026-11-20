@@ -1,0 +1,13 @@
+<%- include('partials/header', { baslik: typeof baslik !== 'undefined' ? baslik : 'Hata' }) %>
+
+<div class="kart" style="text-align: center; padding: 2.5rem 1rem;">
+  <h1 style="color: var(--hata); font-size: 2rem;">⚠ <%= typeof baslik !== 'undefined' ? baslik : 'Bir Sorun Oluştu' %></h1>
+  <p style="font-size: 1.1rem; margin: 1.5rem auto; max-width: 500px;">
+    <%= typeof mesaj !== 'undefined' ? mesaj : 'İşlem sırasında beklenmeyen bir hata meydana geldi.' %>
+  </p>
+  <div style="margin-top: 1.5rem;">
+    <a href="/" class="dugme">Ana Sayfaya Dön</a>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

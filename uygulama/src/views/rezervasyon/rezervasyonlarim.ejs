@@ -1,0 +1,89 @@
+<%- include('../partials/header', { baslik: 'Rezervasyonlarım' }) %>
+
+<div class="kart" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1 style="font-size: 1.4rem; margin: 0;">Rezervasyonlarım</h1>
+    <small style="color: var(--metin-soluk);">Yemekhane menülerine yaptığınız tüm rezervasyonlar ve durumları</small>
+  </div>
+  <div>
+    <span style="font-size: 0.95rem; color: var(--metin-soluk);">Güncel Bakiye:</span>
+    <strong style="font-size: 1.3rem; color: var(--ana);">₺<%= Number(bakiye).toFixed(2) %></strong>
+  </div>
+</div>
+
+<% if (rezervasyonlar && rezervasyonlar.length > 0) { %>
+  <div class="tablo-kaydir">
+    <table>
+      <thead>
+        <tr>
+          <th>Tarih & Öğün</th>
+          <th>Yemekhane</th>
+          <th>Ücret</th>
+          <th>Durum</th>
+          <th>İşlem / İptal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% rezervasyonlar.forEach(r => { %>
+          <tr>
+            <td>
+              <strong><%= r.tarih %></strong> · <%= r.ogun %>
+              <div style="font-size: 0.75rem; color: var(--metin-soluk);">Son İptal Saati: <%= r.rezervasyon_son %></div>
+            </td>
+            <td><%= r.yemekhane %></td>
+            <td><strong>₺<%= Number(r.ucret).toFixed(2) %></strong></td>
+            <td>
+              <% if (r.durum === 'aktif') { %>
+                <span class="rozet rozet-aktif">● Aktif</span>
+              <% } else if (r.durum === 'kullanildi') { %>
+                <span class="rozet rozet-kullanildi">✓ Kullanıldı</span>
+                <% if (r.kullanma_zamani) { %>
+                  <div style="font-size: 0.7rem; color: var(--metin-soluk);"><%= r.kullanma_zamani %></div>
+                <% } %>
+              <% } else { %>
+                <span class="rozet rozet-iptal">✕ İptal Edildi</span>
+                <% if (r.iptal_zamani) { %>
+                  <div style="font-size: 0.7rem; color: var(--metin-soluk);"><%= r.iptal_zamani %></div>
+                <% } %>
+              <% } %>
+            </td>
+            <td>
+              <% if (r.durum === 'aktif') { %>
+                <% if (r.iptal_edilebilir) { %>
+                  <form action="/rezervasyon/iptal" method="POST" onsubmit="return confirm('Bu rezervasyonu iptal etmek istediğinizden emin misiniz? Ücret bakiyenize iade edilecektir.');" style="margin: 0; display: inline-block;">
+                    <input type="hidden" name="rezervasyon_id" value="<%= r.id %>">
+                    <button type="submit" class="dugme dugme-tehlike dugme-kucuk">İptal Et</button>
+                  </form>
+                <% } else { %>
+                  <button type="button" class="dugme dugme-kucuk" disabled aria-disabled="true" title="Son iptal saati geçtiği için iptal edilemez.">İptal Süresi Doldu</button>
+                <% } %>
+
+                <% if (locals.kullanici && locals.kullanici.rol === 'yonetici') { %>
+                  <form action="/turnike/gecis" method="POST" style="margin: 0; display: inline-block; margin-left: 0.3rem;">
+                    <input type="hidden" name="yemekhane_id" value="<%= r.yemekhane.includes('Mühendislik') ? 2 : 1 %>">
+                    <button type="submit" class="dugme dugme-ikincil dugme-kucuk" title="Turnikeden geçişi kaydeder (Durumu 'kullanildi' yapar)">Turnikeden Geç</button>
+                  </form>
+                <% } %>
+              <% } else if (r.durum === 'kullanildi') { %>
+                <% if (r.degerlendirme_puan) { %>
+                  <span style="color: #f39c12; font-weight: 600;">★ <%= r.degerlendirme_puan %> Verildi</span>
+                <% } else { %>
+                  <a href="/degerlendirme" class="dugme dugme-kucuk">Puan Ver</a>
+                <% } %>
+              <% } else { %>
+                <span style="color: var(--metin-soluk); font-size: 0.85rem;">İade edildi</span>
+              <% } %>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+<% } else { %>
+  <div class="kart" style="text-align: center; padding: 2rem;">
+    <p style="color: var(--metin-soluk); font-size: 1.1rem;">Henüz kayıtlı bir rezervasyonunuz bulunmuyor.</p>
+    <a href="/menu/haftalik" class="dugme">Haftalık Menüden Rezervasyon Yap</a>
+  </div>
+<% } %>
+
+<%- include('../partials/footer') %>

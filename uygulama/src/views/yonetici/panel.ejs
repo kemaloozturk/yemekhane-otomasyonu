@@ -1,0 +1,92 @@
+<%- include('../partials/header', { baslik: 'Yönetici Paneli' }) %>
+
+<div class="kart" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h1 style="font-size: 1.4rem; margin: 0;">⚙️ Yemekhane Yönetici Paneli</h1>
+    <small style="color: var(--metin-soluk);">Menü yönetimi, doluluk oranları ve menü değerlendirme puanları</small>
+  </div>
+  <div>
+    <a href="/yonetici/yeni-menu" class="dugme" style="background: #27ae60;">+ Yeni Menü Oluştur</a>
+  </div>
+</div>
+
+<div class="filtre-cubugu">
+  <form action="/yonetici" method="GET" style="display: flex; gap: 1rem; align-items: flex-end; width: 100%;">
+    <div style="flex: 1;">
+      <label for="yemekhane_id">Yemekhane Seçin</label>
+      <select id="yemekhane_id" name="yemekhane_id" onchange="this.form.submit()">
+        <% yemekhaneler.forEach(y => { %>
+          <option value="<%= y.id %>" <%= Number(secilenYemekhaneId) === Number(y.id) ? 'selected' : '' %>>
+            <%= y.ad %> (Kapasite: <%= y.kapasite %>)
+          </option>
+        <% }); %>
+      </select>
+    </div>
+    <div>
+      <noscript><button type="submit" class="dugme">Filtrele</button></noscript>
+    </div>
+  </form>
+</div>
+
+<div class="kart">
+  <div class="kart-baslik">
+    <h2 style="font-size: 1.2rem; margin: 0;">Planlanmış Menüler ve Doluluk Raporu (v_menu_doluluk & v_menu_puan)</h2>
+  </div>
+
+  <% if (menuler && menuler.length > 0) { %>
+    <div class="tablo-kaydir">
+      <table>
+        <thead>
+          <tr>
+            <th>Tarih</th>
+            <th>Öğün</th>
+            <th>Fiyat (Öğr / Per)</th>
+            <th>Kapasite</th>
+            <th>Rezerve</th>
+            <th>Doluluk</th>
+            <th>Ortalama Puan</th>
+            <th>İşlem</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% menuler.forEach(m => { %>
+            <tr>
+              <td><strong><%= m.tarih %></strong></td>
+              <td><%= m.ogun %></td>
+              <td>₺<%= Number(m.ogrenci_fiyati).toFixed(2) %> / ₺<%= Number(m.personel_fiyati).toFixed(2) %></td>
+              <td><%= m.kapasite %></td>
+              <td><strong><%= m.rezerve %></strong></td>
+              <td>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <div style="flex: 1; background: var(--zemin); height: 8px; border-radius: 4px; overflow: hidden; min-width: 60px;">
+                    <div style="background: var(--ana); height: 100%; width: <%= Math.min(m.doluluk_yuzde, 100) %>%;"></div>
+                  </div>
+                  <span style="font-size: 0.8rem; font-weight: 600;">%<%= m.doluluk_yuzde %></span>
+                </div>
+              </td>
+              <td>
+                <% if (m.ortalama_puan) { %>
+                  <span style="color: #f39c12; font-weight: 700;">★ <%= Number(m.ortalama_puan).toFixed(1) %></span>
+                  <small style="color: var(--metin-soluk);">(<%= m.oy_sayisi %> oy)</small>
+                <% } else { %>
+                  <span style="color: var(--metin-soluk); font-size: 0.85rem;">Oy yok</span>
+                <% } %>
+              </td>
+              <td style="white-space: nowrap;">
+                <a href="/yonetici/menu/<%= m.menu_id %>/duzenle" class="dugme dugme-ikincil dugme-kucuk" style="margin-right: 0.3rem;">Düzenle</a>
+                <form action="/yonetici/menu-sil" method="POST" onsubmit="return confirm('Bu menüyü silmek istediğinize emin misiniz?');" style="margin: 0; display: inline-block;">
+                  <input type="hidden" name="menu_id" value="<%= m.menu_id %>">
+                  <button type="submit" class="dugme dugme-tehlike dugme-kucuk">Sil</button>
+                </form>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } else { %>
+    <p style="text-align: center; color: var(--metin-soluk); padding: 1.5rem;">Bu yemekhane için kayıtlı menü bulunamadı.</p>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

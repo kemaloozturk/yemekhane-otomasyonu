@@ -1,0 +1,309 @@
+/* =====================================================================
+   Yemekhane Otomasyonu · uygulama.css
+   Modern, responsive (400px telefon uyumlu), erişilebilir tasarım
+   ===================================================================== */
+
+/* Üst Menü / Navbar */
+.site-baslik {
+  background: var(--ana);
+  color: #ffffff;
+  padding: 0.75rem 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.site-baslik .kapsayici {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .site-baslik .kapsayici {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.marka {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.marka:hover {
+  color: var(--vurgu);
+}
+
+.ana-menu {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ana-menu a {
+  display: inline-block;
+  padding: 0.4rem 0.65rem;
+  color: #e0f2ed;
+  text-decoration: none;
+  border-radius: var(--kose);
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background 0.15s ease;
+}
+
+.ana-menu a:hover, .ana-menu a.aktif {
+  background: var(--ana-koyu);
+  color: #ffffff;
+}
+
+.kullanici-cubuk {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  background: rgba(0,0,0,0.15);
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--kose);
+}
+
+.bakiye-etiket {
+  background: var(--vurgu);
+  color: #1f2a2e;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+.cikis-link {
+  color: #ffcccc !important;
+  text-decoration: underline !important;
+}
+
+/* Kart Düzeni */
+.kart {
+  background: var(--yuzey);
+  border: 1px solid var(--cizgi);
+  border-radius: var(--kose);
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.kart-baslik {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--cizgi);
+  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+/* Rozetler */
+.rozet {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  line-height: 1;
+}
+
+.rozet-vejetaryen {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.rozet-alerjen {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+}
+
+.rozet-aktif {
+  background: #cce5ff;
+  color: #004085;
+}
+
+.rozet-kullanildi {
+  background: #d4edda;
+  color: #155724;
+}
+
+.rozet-iptal {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.rozet-rol {
+  background: #e2e3e5;
+  color: #383d41;
+}
+
+/* Filtre Çubuğu (Yemekhane, Tarih, Öğün Seçimi) */
+.filtre-cubugu {
+  background: var(--yuzey);
+  border: 1px solid var(--cizgi);
+  border-radius: var(--kose);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 600px) {
+  .filtre-cubugu {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    align-items: flex-end;
+  }
+}
+
+/* Yemek Listesi */
+.yemek-listesi {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.yemek-ogesi {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px dashed var(--cizgi);
+}
+
+.yemek-ogesi:last-child {
+  border-bottom: none;
+}
+
+.yemek-bilgi strong {
+  display: block;
+  font-size: 1.05rem;
+}
+
+.yemek-kategori {
+  font-size: 0.8rem;
+  color: var(--metin-soluk);
+}
+
+.yemek-kalori {
+  font-weight: 600;
+  color: var(--metin-soluk);
+  font-size: 0.9rem;
+  text-align: right;
+  min-width: 70px;
+}
+
+/* İstatistik Grid */
+.istatistik-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.istatistik-kutu {
+  background: var(--zemin);
+  padding: 0.85rem;
+  border-radius: var(--kose);
+  text-align: center;
+}
+
+.istatistik-kutu .sayi {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--ana);
+  display: block;
+}
+
+.istatistik-kutu .etiket {
+  font-size: 0.8rem;
+  color: var(--metin-soluk);
+}
+
+/* Tablolar */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+}
+
+th, td {
+  padding: 0.75rem 0.6rem;
+  text-align: left;
+  border-bottom: 1px solid var(--cizgi);
+}
+
+th {
+  background: var(--zemin);
+  font-weight: 600;
+  color: var(--metin);
+}
+
+tr:hover {
+  background: rgba(0,0,0,0.02);
+}
+
+/* Düğmeler ve Gruplar */
+.dugme-ikincil {
+  background: #6c757d;
+}
+.dugme-ikincil:hover {
+  background: #5a6268;
+}
+
+.dugme-tehlike {
+  background: var(--hata);
+}
+.dugme-tehlike:hover {
+  background: #8b1d16;
+}
+
+.dugme-kucuk {
+  min-height: 36px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+/* Mobil 400px İyileştirmeleri */
+@media (max-width: 440px) {
+  body {
+    font-size: 0.95rem;
+  }
+  .kapsayici {
+    padding-inline: 0.75rem;
+  }
+  .kart {
+    padding: 0.85rem;
+  }
+  .dugme {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 0.4rem;
+  }
+  .yemek-ogesi {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+  }
+  .yemek-kalori {
+    text-align: left;
+  }
+}

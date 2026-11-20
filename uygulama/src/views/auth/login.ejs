@@ -1,0 +1,42 @@
+<%- include('../partials/header', { baslik: 'Giriş Yap' }) %>
+
+<div style="max-width: 440px; margin: 1rem auto;">
+  <div class="kart">
+    <div class="kart-baslik">
+      <h1 style="font-size: 1.4rem; margin: 0;">Sisteme Giriş</h1>
+    </div>
+
+    <form action="/giris" method="POST">
+      <div style="margin-bottom: 1rem;">
+        <label for="eposta">Kurumsal E-posta</label>
+        <input type="email" id="eposta" name="eposta" value="<%= eposta || '' %>" placeholder="ornek@kampus.edu.tr" required autofocus>
+      </div>
+
+      <div style="margin-bottom: 1.25rem;">
+        <label for="sifre">Şifre</label>
+        <input type="password" id="sifre" name="sifre" placeholder="••••••••" required>
+      </div>
+
+      <button type="submit" class="dugme" style="width: 100%;">Giriş Yap</button>
+    </form>
+
+    <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--cizgi); font-size: 0.85rem; color: var(--metin-soluk);">
+      <strong>Demo Test Hesapları (Şifre: <code>Yemek2026!</code>)</strong>
+      <ul style="padding-left: 1.2rem; margin: 0.5rem 0 0;">
+        <li><a href="javascript:void(0)" onclick="doldur('leyla.arslan@kampus.edu.tr')">leyla.arslan@kampus.edu.tr</a> (Yönetici)</li>
+        <li><a href="javascript:void(0)" onclick="doldur('murat.kaya@kampus.edu.tr')">murat.kaya@kampus.edu.tr</a> (Personel)</li>
+        <li><a href="javascript:void(0)" onclick="doldur('ayse.demir@ogr.kampus.edu.tr')">ayse.demir@ogr.kampus.edu.tr</a> (Öğrenci - Düşük Bakiye)</li>
+        <li><a href="javascript:void(0)" onclick="doldur('mehmet.yildiz@ogr.kampus.edu.tr')">mehmet.yildiz@ogr.kampus.edu.tr</a> (Öğrenci)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+function doldur(eposta) {
+  document.getElementById('eposta').value = eposta;
+  document.getElementById('sifre').value = 'Yemek2026!';
+}
+</script>
+
+<%- include('../partials/footer') %>

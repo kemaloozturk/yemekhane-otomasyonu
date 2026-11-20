@@ -1,0 +1,70 @@
+<%- include('../partials/header', { baslik: 'Menü Değerlendirme' }) %>
+
+<div class="kart">
+  <div class="kart-baslik">
+    <div>
+      <h1 style="font-size: 1.4rem; margin: 0;">Menü Değerlendirme</h1>
+      <small style="color: var(--metin-soluk);">Yalnızca turnikeden geçip kullandığınız menülere 1–5 arası puan ve yorum bırakabilirsiniz.</small>
+    </div>
+  </div>
+
+  <% if (kullanilmisMenuler && kullanilmisMenuler.length > 0) { %>
+    <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+      <% kullanilmisMenuler.forEach(m => { %>
+        <div style="border: 1px solid var(--cizgi); border-radius: var(--kose); padding: 1rem; background: var(--zemin);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
+            <div>
+              <strong style="font-size: 1.1rem;"><%= m.yemekhane %> · <%= m.ogun %> Menüsü</strong>
+              <div style="font-size: 0.85rem; color: var(--metin-soluk);">Tarih: <%= m.tarih %> | Kullanım: <%= m.kullanma_zamani %></div>
+            </div>
+            <% if (m.puan) { %>
+              <span class="rozet rozet-kullanildi" style="font-size: 0.9rem;">
+                Mevcut Puanınız: ★ <%= m.puan %> / 5
+              </span>
+            <% } else { %>
+              <span class="rozet rozet-alerjen">Henüz Değerlendirilmedi</span>
+            <% } %>
+          </div>
+
+          <form action="/degerlendirme/yap" method="POST" style="margin-top: 0.75rem; background: var(--yuzey); padding: 1rem; border-radius: var(--kose); border: 1px solid var(--cizgi);">
+            <input type="hidden" name="menu_id" value="<%= m.menu_id %>">
+
+            <div style="margin-bottom: 0.75rem;">
+              <label for="puan-<%= m.menu_id %>" style="font-size: 0.9rem;">Puanınız (1 - 5 Yıldız)</label>
+              <select id="puan-<%= m.menu_id %>" name="puan" required style="max-width: 200px;">
+                <option value="">Seçiniz...</option>
+                <option value="5" <%= m.puan === 5 ? 'selected' : '' %>>★★★★★ (5 - Çok İyi)</option>
+                <option value="4" <%= m.puan === 4 ? 'selected' : '' %>>★★★★☆ (4 - İyi)</option>
+                <option value="3" <%= m.puan === 3 ? 'selected' : '' %>>★★★☆☆ (3 - Orta)</option>
+                <option value="2" <%= m.puan === 2 ? 'selected' : '' %>>★★☆☆☆ (2 - Zayıf)</option>
+                <option value="1" <%= m.puan === 1 ? 'selected' : '' %>>★☆☆☆☆ (1 - Çok Kötü)</option>
+              </select>
+            </div>
+
+            <div style="margin-bottom: 0.75rem;">
+              <label for="yorum-<%= m.menu_id %>" style="font-size: 0.9rem;">Yorumunuz (İsteğe bağlı)</label>
+              <textarea id="yorum-<%= m.menu_id %>" name="yorum" rows="2" placeholder="Menü ve lezzet hakkında görüşünüzü yazın..."><%= m.yorum || '' %></textarea>
+            </div>
+
+            <button type="submit" class="dugme dugme-kucuk">
+              <%= m.puan ? 'Değerlendirmeyi Güncelle' : 'Değerlendirmeyi Kaydet' %>
+            </button>
+          </form>
+        </div>
+      <% }); %>
+    </div>
+  <% } else { %>
+    <div style="text-align: center; padding: 2.5rem 1rem;">
+      <p style="color: var(--metin-soluk); font-size: 1.05rem;">
+        Henüz turnikeden geçiş yapılmış (kullanılmış) bir rezervasyonunuz bulunmuyor.
+      </p>
+      <p style="font-size: 0.9rem; color: var(--metin-soluk);">
+        Ödev kuralı gereği sadece kullandığınız öğünleri değerlendirebilirsiniz. 
+        Test için <strong>Rezervasyonlarım</strong> sayfasından <em>"Turnikeden Geç (Test)"</em> düğmesini kullanarak bir rezervasyonunuzu kullanıldı yapabilirsiniz.
+      </p>
+      <a href="/rezervasyonlarim" class="dugme">Rezervasyonlarıma Git</a>
+    </div>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

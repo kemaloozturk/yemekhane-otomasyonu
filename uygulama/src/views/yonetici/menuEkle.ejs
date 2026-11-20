@@ -1,0 +1,78 @@
+<%- include('../partials/header', { baslik: 'Yeni Menü Oluştur' }) %>
+
+<div class="kart" style="max-width: 700px; margin: 0 auto;">
+  <div class="kart-baslik">
+    <h1 style="font-size: 1.4rem; margin: 0;">Yeni Menü Oluştur</h1>
+    <a href="/yonetici" class="dugme dugme-ikincil dugme-kucuk">← Panele Dön</a>
+  </div>
+
+  <form action="/yonetici/menu-kaydet" method="POST">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+      <div>
+        <label for="yemekhane_id">Yemekhane</label>
+        <select id="yemekhane_id" name="yemekhane_id" required>
+          <% yemekhaneler.forEach(y => { %>
+            <option value="<%= y.id %>"><%= y.ad %> (<%= y.kapasite %> kişi)</option>
+          <% }); %>
+        </select>
+      </div>
+
+      <div>
+        <label for="tarih">Tarih</label>
+        <input type="date" id="tarih" name="tarih" required>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+      <div>
+        <label for="ogun_id">Öğün</label>
+        <select id="ogun_id" name="ogun_id" required>
+          <% ogunler.forEach(o => { %>
+            <option value="<%= o.id %>"><%= o.ad %></option>
+          <% }); %>
+        </select>
+      </div>
+
+      <div>
+        <label for="ogrenci_fiyati">Öğrenci Fiyatı (TL)</label>
+        <input type="number" id="ogrenci_fiyati" name="ogrenci_fiyati" step="0.50" value="25.00" required>
+      </div>
+
+      <div>
+        <label for="personel_fiyati">Personel Fiyatı (TL)</label>
+        <input type="number" id="personel_fiyati" name="personel_fiyati" step="0.50" value="45.00" required>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 1.5rem;">
+      <label style="font-size: 1.05rem; margin-bottom: 0.5rem;">Menüye Eklenecek Yemekler</label>
+      
+      <div style="display: flex; flex-direction: column; gap: 1rem; max-height: 380px; overflow-y: auto; padding: 0.5rem; border: 1px solid var(--cizgi); border-radius: var(--kose); background: var(--zemin);">
+        <% Object.keys(grupluYemekler).forEach(kategori => { %>
+          <div style="background: var(--yuzey); padding: 0.75rem; border-radius: var(--kose);">
+            <strong style="color: var(--ana); font-size: 0.95rem;"><%= kategori %></strong>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.4rem; margin-top: 0.4rem;">
+              <% grupluYemekler[kategori].forEach(y => { %>
+                <label style="display: flex; align-items: center; gap: 0.4rem; font-weight: normal; font-size: 0.85rem; margin: 0; cursor: pointer;">
+                  <input type="checkbox" name="yemek_idler" value="<%= y.id %>" style="width: auto;">
+                  <span><%= y.ad %> <small style="color: var(--metin-soluk);">(<%= y.kalori %> kcal)</small></span>
+                </label>
+              <% }); %>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    </div>
+
+    <button type="submit" class="dugme" style="width: 100%;">Menüyü Kaydet ve Yayınla</button>
+  </form>
+</div>
+
+<script>
+// Tarih varsayılanı olarak yarını seçelim
+const yarin = new Date();
+yarin.setDate(yarin.getDate() + 1);
+document.getElementById('tarih').value = yarin.toISOString().slice(0, 10);
+</script>
+
+<%- include('../partials/footer') %>

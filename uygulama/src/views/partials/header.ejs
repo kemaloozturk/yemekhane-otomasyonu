@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= typeof baslik !== 'undefined' ? baslik + ' - Yemekhane Otomasyonu' : 'Yemekhane Otomasyonu' %></title>
+  <link rel="stylesheet" href="/css/temel.css">
+  <link rel="stylesheet" href="/css/uygulama.css">
+</head>
+<body>
+  <header class="site-baslik">
+    <div class="kapsayici">
+      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <a href="/" class="marka">
+          <span>🍽️ Yemekhane</span>
+        </a>
+        <% if (locals.kullanici) { %>
+          <div class="kullanici-cubuk">
+            <span><strong><%= kullanici.ad %> <%= kullanici.soyad %></strong></span>
+            <span class="rozet rozet-rol"><%= kullanici.rol === 'ogrenci' ? 'Öğrenci' : (kullanici.rol === 'personel' ? 'Personel' : 'Yönetici') %></span>
+            <a href="/bakiye" class="bakiye-etiket" title="Bakiye Yükle">₺<%= Number(kullanici.bakiye).toFixed(2) %></a>
+            <form action="/cikis" method="POST" style="display: inline; margin: 0;">
+              <button type="submit" class="cikis-link" style="background: none; border: none; cursor: pointer; font: inherit; padding: 0;">Çıkış</button>
+            </form>
+          </div>
+        <% } else { %>
+          <a href="/giris" class="dugme dugme-kucuk" style="background: var(--vurgu); color: #1f2a2e;">Giriş Yap</a>
+        <% } %>
+      </div>
+
+      <nav>
+        <ul class="ana-menu">
+          <li><a href="/menu/gunun">Günün Menüsü</a></li>
+          <li><a href="/menu/haftalik">Haftalık Menü & Rezervasyon</a></li>
+          <% if (locals.kullanici) { %>
+            <li><a href="/rezervasyonlarim">Rezervasyonlarım</a></li>
+            <li><a href="/bakiye">Bakiye</a></li>
+            <li><a href="/degerlendirme">Değerlendirme</a></li>
+            <% if (kullanici.rol === 'yonetici') { %>
+              <li><a href="/yonetici" style="background: #e67e22; color: #fff;">⚙️ Yönetici Paneli</a></li>
+            <% } %>
+          <% } %>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="kapsayici" style="padding-top: 1.5rem; padding-bottom: 2rem;">
+    <% if (typeof mesaj !== 'undefined' && mesaj) { %>
+      <div class="bildirim bildirim-basari" role="alert" style="margin-bottom: 1rem;">
+        <strong>✓ Başarılı:</strong> <%= mesaj %>
+      </div>
+    <% } %>
+
+    <% if (typeof hata !== 'undefined' && hata) { %>
+      <div class="bildirim bildirim-hata" role="alert" style="margin-bottom: 1rem;">
+        <strong>⚠ Hata:</strong> <%= hata %>
+      </div>
+    <% } %>

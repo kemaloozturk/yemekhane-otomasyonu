@@ -7,7 +7,8 @@ async function goster(req, res) {
     res.render('durum', { kaynak, replika, hata: null });
   } catch (err) {
     console.error(err);
-    res.status(500).render('durum', { kaynak: null, replika: null, hata: err.message });
+    console.error('Durum kontrol hatası:', err);
+    res.status(500).render('durum', { kaynak: null, replika: null, hata: 'Veritabanı bağlantı kontrolü başarısız oldu.' });
   }
 }
 
