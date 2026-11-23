@@ -48,10 +48,52 @@ async function bakiyeHareketleriGetir(kullaniciId) {
   return satirlar;
 }
 
+// Tüm alerjenler listesi (replikadan okuma)
+async function tumAlerjenler() {
+  const [satirlar] = await okuma.query('SELECT id, ad FROM alerjenler ORDER BY ad ASC');
+  return satirlar;
+}
+
+// Kullanıcının kayıtlı alerjenleri (kayıt sonrası tutarlılık için kaynaktan da okunabilir)
+async function kullaniciAlerjenleri(kullaniciId, kaynaktan = false) {
+  const havuz = kaynaktan ? yazma : okuma;
+  const [satirlar] = await havuz.query(
+    'SELECT alerjen_id FROM kullanici_alerjenleri WHERE kullanici_id = ?',
+    [kullaniciId]
+  );
+  return satirlar.map((s) => s.alerjen_id);
+}
+
+// Kullanıcının alerjen tercihlerini güncelleme (kaynak sunucu)
+async function kullaniciAlerjenKaydet(kullaniciId, alerjenIdler) {
+  const baglanti = await yazma.getConnection();
+  try {
+    await baglanti.beginTransaction();
+    await baglanti.query('DELETE FROM kullanici_alerjenleri WHERE kullanici_id = ?', [kullaniciId]);
+    if (Array.isArray(alerjenIdler) && alerjenIdler.length > 0) {
+      for (const aId of alerjenIdler) {
+        await baglanti.query(
+          'INSERT INTO kullanici_alerjenleri (kullanici_id, alerjen_id) VALUES (?, ?)',
+          [kullaniciId, aId]
+        );
+      }
+    }
+    await baglanti.commit();
+  } catch (err) {
+    await baglanti.rollback();
+    throw err;
+  } finally {
+    baglanti.release();
+  }
+}
+
 module.exports = {
   epostaIleGetir,
   idIleGetir,
   bakiyeGetirKaynaktan,
   bakiyeYukle,
   bakiyeHareketleriGetir,
+  tumAlerjenler,
+  kullaniciAlerjenleri,
+  kullaniciAlerjenKaydet,
 };

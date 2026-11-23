@@ -6,6 +6,7 @@ const menuController = require('../controllers/menuController');
 const rezervasyonController = require('../controllers/rezervasyonController');
 const bakiyeController = require('../controllers/bakiyeController');
 const degerlendirmeController = require('../controllers/degerlendirmeController');
+const profilController = require('../controllers/profilController');
 const yoneticiController = require('../controllers/yoneticiController');
 
 const { girisGerekli, yoneticiGerekli } = require('../middlewares/authMiddleware');
@@ -39,6 +40,10 @@ router.post('/bakiye/yukle', girisGerekli, bakiyeController.bakiyeYukle);
 // 6. Değerlendirme
 router.get('/degerlendirme', girisGerekli, degerlendirmeController.degerlendirmeSayfasi);
 router.post('/degerlendirme/yap', girisGerekli, degerlendirmeController.degerlendirmeGonder);
+
+// 6.1 Alerjen Tercihleri (Aşama 4)
+router.get('/profil/alerjenler', girisGerekli, profilController.alerjenSayfasi);
+router.post('/profil/alerjenler', girisGerekli, profilController.alerjenKaydet);
 
 // 7. Yönetici Paneli
 router.get('/yonetici', yoneticiGerekli, yoneticiController.panel);

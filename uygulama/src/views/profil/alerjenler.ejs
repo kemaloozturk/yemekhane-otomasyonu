@@ -1,0 +1,28 @@
+<%- include('../partials/header', { baslik: 'Alerjen Tercihlerim' }) %>
+
+<div class="kart" style="max-width: 600px; margin: 0 auto;">
+  <div class="kart-baslik">
+    <div>
+      <h1 style="font-size: 1.35rem; margin: 0;">Alerjen Tercihlerim</h1>
+      <small style="color: var(--metin-soluk);">
+        Hassasiyetiniz olan besin maddelerini seçin. Menüleri incelerken bu alerjenleri içeren yemekler kırmızı uyarı ile vurgulanır.
+      </small>
+    </div>
+  </div>
+
+  <form action="/profil/alerjenler" method="POST">
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.6rem; margin-bottom: 1.5rem;">
+      <% tumAlerjenler.forEach(a => { %>
+        <% const secili = kayitliAlerjenler.includes(a.id); %>
+        <label style="display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem; border: 1px solid var(--cizgi); border-radius: var(--kose); background: <%= secili ? '#fff3cd' : 'var(--yuzey)' %>; cursor: pointer;">
+          <input type="checkbox" name="alerjen_idler" value="<%= a.id %>" <%= secili ? 'checked' : '' %> style="width: auto;">
+          <span><%= a.ad %></span>
+        </label>
+      <% }); %>
+    </div>
+
+    <button type="submit" class="dugme" style="width: 100%;">Tercihlerimi Kaydet</button>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

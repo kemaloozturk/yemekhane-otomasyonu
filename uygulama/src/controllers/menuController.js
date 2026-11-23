@@ -1,5 +1,6 @@
 const menuRepository = require('../repositories/menuRepository');
 const rezervasyonRepository = require('../repositories/rezervasyonRepository');
+const kullaniciRepository = require('../repositories/kullaniciRepository');
 
 // Bugünün tarihini YYYY-MM-DD olarak döndürür
 function bugununTarihi() {
@@ -28,13 +29,15 @@ async function gununMenusu(req, res) {
 
     const menu = await menuRepository.gununMenusu(secilenYemekhaneId, secilenTarih, secilenOgunId);
 
-    // Kullanıcı giriş yapmışsa bu menü için rezervasyonunu kontrol et
+    // Kullanıcı giriş yapmışsa bu menü için rezervasyonunu ve alerjenlerini kontrol et
     let kullaniciRezervasyonu = null;
+    let kullaniciAlerjenleri = [];
     if (req.kullanici) {
       const aktifMenuIdleri = await rezervasyonRepository.kullaniciAktifMenuIdleri(req.kullanici.id);
       if (menu && aktifMenuIdleri[menu.id]) {
         kullaniciRezervasyonu = aktifMenuIdleri[menu.id];
       }
+      kullaniciAlerjenleri = await kullaniciRepository.kullaniciAlerjenleri(req.kullanici.id);
     }
 
     res.render('menu/gunun', {
@@ -46,6 +49,7 @@ async function gununMenusu(req, res) {
       secilenOgunId,
       menu,
       kullaniciRezervasyonu,
+      kullaniciAlerjenleri,
       mesaj: req.query.mesaj || null,
       hata: req.query.hata || null,
     });
