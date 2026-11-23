@@ -106,9 +106,10 @@ async function gununMenusu(yemekhaneId, tarih, ogunId) {
     }
   }
 
-  // Canlı doluluk ve puan bilgilerini her istekte replikadan taze çek
+  // Canlı doluluk, son saat kontrolü ve puan bilgilerini her istekte replikadan taze çek
   const [[doluluk]] = await okuma.query(
-    `SELECT kapasite, rezerve, bos_yer, doluluk_yuzde FROM v_menu_doluluk WHERE menu_id = ?`,
+    `SELECT kapasite, rezerve, bos_yer, doluluk_yuzde, (rezervasyon_son <= NOW()) AS sure_gecti
+     FROM v_menu_doluluk WHERE menu_id = ?`,
     [sabitMenu.id]
   );
   const [[puanBilgi]] = await okuma.query(
@@ -122,6 +123,7 @@ async function gununMenusu(yemekhaneId, tarih, ogunId) {
     rezerve: doluluk ? doluluk.rezerve : 0,
     bos_yer: doluluk ? doluluk.bos_yer : 0,
     doluluk_yuzde: doluluk ? doluluk.doluluk_yuzde : 0,
+    sure_gecti: doluluk ? Boolean(doluluk.sure_gecti) : false,
     oy_sayisi: puanBilgi ? puanBilgi.oy_sayisi : 0,
     ortalama_puan: puanBilgi && puanBilgi.ortalama_puan ? Number(puanBilgi.ortalama_puan) : null,
   };
@@ -142,6 +144,7 @@ async function haftalikMenuler(yemekhaneId, baslangicTarihi, bitisTarihi) {
        d.bos_yer,
        d.doluluk_yuzde,
        d.rezervasyon_son,
+       (d.rezervasyon_son <= NOW()) AS gecmis,
        m.ogrenci_fiyati,
        m.personel_fiyati,
        p.oy_sayisi,
@@ -167,7 +170,7 @@ async function haftalikMenuler(yemekhaneId, baslangicTarihi, bitisTarihi) {
     );
     m.tarih = tarihFormatla(m.tarih);
     m.yemekler = yemekler;
-    m.gecmis = new Date() >= new Date(m.rezervasyon_son);
+    m.gecmis = Boolean(m.gecmis);
   }
 
   return menuler;
@@ -188,6 +191,7 @@ async function yoneticiMenuleriniGetir(yemekhaneId, limit = 30) {
        d.bos_yer,
        d.doluluk_yuzde,
        d.rezervasyon_son,
+       (d.rezervasyon_son <= NOW()) AS gecmis,
        m.ogrenci_fiyati,
        m.personel_fiyati,
        p.oy_sayisi,

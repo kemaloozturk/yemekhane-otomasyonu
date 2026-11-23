@@ -119,8 +119,7 @@
               </label>
             <% } %>
 
-            <% const sureGecti = new Date() >= new Date(menu.rezervasyon_son); %>
-            <% if (sureGecti) { %>
+            <% if (menu.sure_gecti) { %>
               <button type="button" class="dugme" disabled aria-disabled="true">Rezervasyon Süresi Doldu (<%= menu.rezervasyon_son %>)</button>
             <% } else if (menu.bos_yer <= 0) { %>
               <button type="button" class="dugme" disabled aria-disabled="true">Kapasite Dolu</button>
