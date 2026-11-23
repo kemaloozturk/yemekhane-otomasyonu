@@ -14,6 +14,7 @@ function guvenliDonusUrl(url, varsayilan = '/menu/haftalik') {
 // Rezervasyon Yap (sp_rezervasyon_yap)
 async function rezervasyonYap(req, res) {
   const menuId = Number(req.body.menu_id);
+  const yarimPorsiyon = req.body.yarim_porsiyon === '1' ? 1 : 0;
   const donusUrl = guvenliDonusUrl(req.body.donus_url, '/menu/haftalik');
 
   if (!menuId) {
@@ -21,7 +22,7 @@ async function rezervasyonYap(req, res) {
   }
 
   try {
-    const sonuc = await rezervasyonRepository.rezervasyonYap(req.kullanici.id, menuId);
+    const sonuc = await rezervasyonRepository.rezervasyonYap(req.kullanici.id, menuId, yarimPorsiyon);
 
     if (!sonuc.basarili) {
       return res.redirect(donusUrl + (donusUrl.includes('?') ? '&' : '?') + 'hata=' + encodeURIComponent(sonuc.hata));

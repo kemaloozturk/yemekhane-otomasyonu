@@ -31,7 +31,10 @@
               <div style="font-size: 0.75rem; color: var(--metin-soluk);">Son İptal Saati: <%= r.rezervasyon_son %></div>
             </td>
             <td><%= r.yemekhane %></td>
-            <td><strong>₺<%= Number(r.ucret).toFixed(2) %></strong></td>
+            <td>
+              <strong>₺<%= Number(r.ucret).toFixed(2) %></strong>
+              <div style="font-size: 0.75rem; color: var(--metin-soluk);"><%= r.porsiyon === 'yarim' ? 'Yarım Porsiyon' : 'Tam Porsiyon' %></div>
+            </td>
             <td>
               <% if (r.durum === 'aktif') { %>
                 <span class="rozet rozet-aktif">● Aktif</span>

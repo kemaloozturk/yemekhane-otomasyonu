@@ -71,6 +71,11 @@
                 <form action="/rezervasyon/yap" method="POST" style="margin: 0; display: flex; flex-direction: column; gap: 0.25rem;">
                   <input type="hidden" name="menu_id" value="<%= m.menu_id %>">
                   <input type="hidden" name="donus_url" value="/menu/haftalik?yemekhane_id=<%= secilenYemekhaneId %>">
+                  <% if (m.ogun_id !== 1) { %>
+                    <label style="font-size: 0.75rem; margin: 0; font-weight: normal; cursor: pointer;">
+                      <input type="checkbox" name="yarim_porsiyon" value="1" style="width: auto;"> Yarım (%60)
+                    </label>
+                  <% } %>
                   <button type="submit" class="dugme dugme-kucuk">Rezervasyon</button>
                 </form>
               <% } else { %>

@@ -112,6 +112,13 @@
             <input type="hidden" name="menu_id" value="<%= menu.id %>">
             <input type="hidden" name="donus_url" value="/menu/gunun?yemekhane_id=<%= secilenYemekhaneId %>&tarih=<%= secilenTarih %>&ogun_id=<%= secilenOgunId %>">
 
+            <% if (menu.ogun_id !== 1) { %>
+              <label style="display: inline-flex; align-items: center; gap: 0.4rem; font-weight: normal; margin: 0; cursor: pointer;">
+                <input type="checkbox" name="yarim_porsiyon" value="1" style="width: auto;">
+                Yarım Porsiyon (%60 Fiyat: ₺<%= ( (locals.kullanici.rol === 'ogrenci' ? menu.ogrenci_fiyati : menu.personel_fiyati) * 0.60 ).toFixed(2) %>)
+              </label>
+            <% } %>
+
             <% const sureGecti = new Date() >= new Date(menu.rezervasyon_son); %>
             <% if (sureGecti) { %>
               <button type="button" class="dugme" disabled aria-disabled="true">Rezervasyon Süresi Doldu (<%= menu.rezervasyon_son %>)</button>

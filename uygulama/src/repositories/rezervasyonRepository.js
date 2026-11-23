@@ -1,12 +1,13 @@
 const { yazma, okuma } = require('../db');
 const { kullaniciHataMesaji } = require('../utils/hataYardimcisi');
 
-// Rezervasyon Yap (sp_rezervasyon_yap - kaynak sunucuda çalışır)
-async function rezervasyonYap(kullaniciId, menuId) {
+// Rezervasyon Yap (sp_rezervasyon_yap - kaynak sunucuda çalışır, porsiyon destekli)
+async function rezervasyonYap(kullaniciId, menuId, yarimPorsiyon = 0) {
   try {
-    const [sonuclar] = await yazma.query('CALL sp_rezervasyon_yap(?, ?)', [
+    const [sonuclar] = await yazma.query('CALL sp_rezervasyon_yap(?, ?, ?)', [
       kullaniciId,
       menuId,
+      yarimPorsiyon ? 1 : 0,
     ]);
     const satir = sonuclar[0] && sonuclar[0][0];
     return {
@@ -51,6 +52,7 @@ async function kullaniciRezervasyonlari(kullaniciId) {
        r.id,
        r.menu_id,
        r.durum,
+       r.porsiyon,
        r.ucret,
        r.olusturma,
        r.iptal_zamani,
