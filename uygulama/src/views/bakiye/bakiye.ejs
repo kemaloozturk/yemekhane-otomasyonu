@@ -42,7 +42,7 @@
 
   <% if (hareketler && hareketler.length > 0) { %>
     <div class="tablo-kaydir">
-      <table>
+      <table class="duyarli-tablo">
         <thead>
           <tr>
             <th>Tarih / Saat</th>
@@ -55,8 +55,8 @@
           <% hareketler.forEach(h => { %>
             <% const pozitif = Number(h.tutar) > 0; %>
             <tr>
-              <td><%= h.olusturma %></td>
-              <td>
+              <td data-label="Tarih / Saat"><%= h.olusturma %></td>
+              <td data-label="İşlem Türü">
                 <% if (h.tur === 'yukleme') { %>
                   <span class="rozet rozet-kullanildi">Yükleme</span>
                 <% } else if (h.tur === 'iade') { %>
@@ -65,8 +65,8 @@
                   <span class="rozet rozet-iptal">Rezervasyon</span>
                 <% } %>
               </td>
-              <td><%= h.aciklama || '—' %></td>
-              <td style="text-align: right; font-weight: 700; color: <%= pozitif ? 'var(--basari)' : 'var(--hata)' %>;">
+              <td data-label="Açıklama" class="hucre-yigin"><%= h.aciklama || '—' %></td>
+              <td data-label="Tutar" style="text-align: right; font-weight: 700; color: <%= pozitif ? 'var(--basari)' : 'var(--hata)' %>;">
                 <%= pozitif ? '+' : '' %>₺<%= Number(h.tutar).toFixed(2) %>
               </td>
             </tr>

@@ -35,7 +35,7 @@
 
   <% if (menuler && menuler.length > 0) { %>
     <div class="tablo-kaydir">
-      <table>
+      <table class="duyarli-tablo">
         <thead>
           <tr>
             <th>Tarih</th>
@@ -51,12 +51,12 @@
         <tbody>
           <% menuler.forEach(m => { %>
             <tr>
-              <td><strong><%= m.tarih %></strong></td>
-              <td><%= m.ogun %></td>
-              <td>₺<%= Number(m.ogrenci_fiyati).toFixed(2) %> / ₺<%= Number(m.personel_fiyati).toFixed(2) %></td>
-              <td><%= m.kapasite %></td>
-              <td><strong><%= m.rezerve %></strong></td>
-              <td>
+              <td data-label="Tarih"><strong><%= m.tarih %></strong></td>
+              <td data-label="Öğün"><%= m.ogun %></td>
+              <td data-label="Fiyat (Öğr / Per)">₺<%= Number(m.ogrenci_fiyati).toFixed(2) %> / ₺<%= Number(m.personel_fiyati).toFixed(2) %></td>
+              <td data-label="Kapasite"><%= m.kapasite %></td>
+              <td data-label="Rezerve"><strong><%= m.rezerve %></strong></td>
+              <td data-label="Doluluk">
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                   <div style="flex: 1; background: var(--zemin); height: 8px; border-radius: 4px; overflow: hidden; min-width: 60px;">
                     <div style="background: var(--ana); height: 100%; width: <%= Math.min(m.doluluk_yuzde, 100) %>%;"></div>
@@ -64,7 +64,7 @@
                   <span style="font-size: 0.8rem; font-weight: 600;">%<%= m.doluluk_yuzde %></span>
                 </div>
               </td>
-              <td>
+              <td data-label="Ortalama Puan">
                 <% if (m.ortalama_puan) { %>
                   <span style="color: #f39c12; font-weight: 700;">★ <%= Number(m.ortalama_puan).toFixed(1) %></span>
                   <small style="color: var(--metin-soluk);">(<%= m.oy_sayisi %> oy)</small>
@@ -72,7 +72,7 @@
                   <span style="color: var(--metin-soluk); font-size: 0.85rem;">Oy yok</span>
                 <% } %>
               </td>
-              <td style="white-space: nowrap;">
+              <td data-label="İşlem" style="white-space: nowrap;">
                 <a href="/yonetici/menu/<%= m.menu_id %>/duzenle" class="dugme dugme-ikincil dugme-kucuk" style="margin-right: 0.3rem;">Düzenle</a>
                 <form action="/yonetici/menu-sil" method="POST" onsubmit="return confirm('Bu menüyü silmek istediğinize emin misiniz?');" style="margin: 0; display: inline-block;">
                   <input type="hidden" name="menu_id" value="<%= m.menu_id %>">

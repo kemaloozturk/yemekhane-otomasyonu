@@ -13,7 +13,7 @@
 
 <% if (rezervasyonlar && rezervasyonlar.length > 0) { %>
   <div class="tablo-kaydir">
-    <table>
+    <table class="duyarli-tablo">
       <thead>
         <tr>
           <th>Tarih & Öğün</th>
@@ -26,31 +26,37 @@
       <tbody>
         <% rezervasyonlar.forEach(r => { %>
           <tr>
-            <td>
-              <strong><%= r.tarih %></strong> · <%= r.ogun %>
-              <div style="font-size: 0.75rem; color: var(--metin-soluk);">Son İptal Saati: <%= r.rezervasyon_son %></div>
+            <td data-label="Tarih & Öğün">
+              <div>
+                <strong><%= r.tarih %></strong> · <%= r.ogun %>
+                <div style="font-size: 0.75rem; color: var(--metin-soluk);">Son İptal Saati: <%= r.rezervasyon_son %></div>
+              </div>
             </td>
-            <td><%= r.yemekhane %></td>
-            <td>
-              <strong>₺<%= Number(r.ucret).toFixed(2) %></strong>
-              <div style="font-size: 0.75rem; color: var(--metin-soluk);"><%= r.porsiyon === 'yarim' ? 'Yarım Porsiyon' : 'Tam Porsiyon' %></div>
+            <td data-label="Yemekhane"><%= r.yemekhane %></td>
+            <td data-label="Ücret">
+              <div>
+                <strong>₺<%= Number(r.ucret).toFixed(2) %></strong>
+                <div style="font-size: 0.75rem; color: var(--metin-soluk);"><%= r.porsiyon === 'yarim' ? 'Yarım Porsiyon' : 'Tam Porsiyon' %></div>
+              </div>
             </td>
-            <td>
-              <% if (r.durum === 'aktif') { %>
-                <span class="rozet rozet-aktif">● Aktif</span>
-              <% } else if (r.durum === 'kullanildi') { %>
-                <span class="rozet rozet-kullanildi">✓ Kullanıldı</span>
-                <% if (r.kullanma_zamani) { %>
-                  <div style="font-size: 0.7rem; color: var(--metin-soluk);"><%= r.kullanma_zamani %></div>
+            <td data-label="Durum">
+              <div>
+                <% if (r.durum === 'aktif') { %>
+                  <span class="rozet rozet-aktif">● Aktif</span>
+                <% } else if (r.durum === 'kullanildi') { %>
+                  <span class="rozet rozet-kullanildi">✓ Kullanıldı</span>
+                  <% if (r.kullanma_zamani) { %>
+                    <div style="font-size: 0.7rem; color: var(--metin-soluk);"><%= r.kullanma_zamani %></div>
+                  <% } %>
+                <% } else { %>
+                  <span class="rozet rozet-iptal">✕ İptal Edildi</span>
+                  <% if (r.iptal_zamani) { %>
+                    <div style="font-size: 0.7rem; color: var(--metin-soluk);"><%= r.iptal_zamani %></div>
+                  <% } %>
                 <% } %>
-              <% } else { %>
-                <span class="rozet rozet-iptal">✕ İptal Edildi</span>
-                <% if (r.iptal_zamani) { %>
-                  <div style="font-size: 0.7rem; color: var(--metin-soluk);"><%= r.iptal_zamani %></div>
-                <% } %>
-              <% } %>
+              </div>
             </td>
-            <td>
+            <td data-label="İşlem / İptal">
               <% if (r.durum === 'aktif') { %>
                 <% if (r.iptal_edilebilir) { %>
                   <form action="/rezervasyon/iptal" method="POST" onsubmit="return confirm('Bu rezervasyonu iptal etmek istediğinizden emin misiniz? Ücret bakiyenize iade edilecektir.');" style="margin: 0; display: inline-block;">

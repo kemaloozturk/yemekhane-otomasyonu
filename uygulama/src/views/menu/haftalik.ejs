@@ -20,7 +20,7 @@
 
 <% if (menuler && menuler.length > 0) { %>
   <div class="tablo-kaydir">
-    <table>
+    <table class="duyarli-tablo">
       <thead>
         <tr>
           <th>Tarih</th>
@@ -36,29 +36,35 @@
           <% const rezerveDurumu = aktifMenuIdleri[m.menu_id]; %>
           <% const kullaniciUcret = m.kullanici_fiyati; %>
           <tr>
-            <td>
-              <strong><%= m.tarih %></strong>
-              <div style="font-size: 0.75rem; color: var(--metin-soluk);">Son Saat: <%= m.rezervasyon_son.slice(11, 16) %></div>
+            <td data-label="Tarih">
+              <div>
+                <strong><%= m.tarih %></strong>
+                <div style="font-size: 0.75rem; color: var(--metin-soluk);">Son Saat: <%= m.rezervasyon_son.slice(11, 16) %></div>
+              </div>
             </td>
-            <td>
+            <td data-label="Öğün">
               <span class="rozet" style="background: var(--zemin);"><%= m.ogun %></span>
             </td>
-            <td>
+            <td data-label="Menü Özeti" class="hucre-yigin">
               <% if (m.yemekler && m.yemekler.length > 0) { %>
                 <span style="font-size: 0.9rem;"><%= m.yemekler.map(y => y.ad).join(', ') %></span>
               <% } else { %>
                 <span style="color: var(--metin-soluk);">Menü belirleniyor</span>
               <% } %>
             </td>
-            <td>
-              <strong><%= m.bos_yer %></strong> / <%= m.kapasite %>
-              <div style="font-size: 0.75rem; color: var(--metin-soluk);">%<%= m.doluluk_yuzde %> dolu</div>
+            <td data-label="Boş Yer">
+              <div>
+                <strong><%= m.bos_yer %></strong> / <%= m.kapasite %>
+                <div style="font-size: 0.75rem; color: var(--metin-soluk);">%<%= m.doluluk_yuzde %> dolu</div>
+              </div>
             </td>
-            <td>
-              <strong style="color: var(--ana);">₺<%= Number(kullaniciUcret).toFixed(2) %></strong>
-              <% if (!locals.kullanici) { %><small>(Öğr.)</small><% } %>
+            <td data-label="Ücret">
+              <div>
+                <strong style="color: var(--ana);">₺<%= Number(kullaniciUcret).toFixed(2) %></strong>
+                <% if (!locals.kullanici) { %><small>(Öğr.)</small><% } %>
+              </div>
             </td>
-            <td style="min-width: 140px;">
+            <td data-label="İşlem" style="min-width: 140px;">
               <% if (rezerveDurumu) { %>
                 <span class="rozet rozet-<%= rezerveDurumu === 'aktif' ? 'aktif' : 'kullanildi' %>">
                   ✓ <%= rezerveDurumu === 'aktif' ? 'Rezerve Edildi' : 'Kullanıldı' %>
