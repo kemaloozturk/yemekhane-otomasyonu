@@ -98,6 +98,19 @@ TTL2=$(docker compose exec -T redis redis-cli TTL "$OTURUM_ANAHTAR" | tr -d '\r'
 echo "İstek sonrası yenilenen TTL: $TTL2"
 
 echo
+echo "=== 7. Uygulama Container'ı Yeniden Başlasa Da Oturum Düşmüyor ==="
+echo "\$ docker compose restart uygulama"
+docker compose restart uygulama >/dev/null 2>&1
+sleep 3
+echo "\$ Restart sonrası aynı çerezle GET /bakiye (200 OK ve kullanıcı adı beklenir)"
+HTTP_SONRA=$(curl -s -b "$COOKIE_OGR" -o /tmp/asama3-bakiye.html -w "%{http_code}" "${BASE}/bakiye")
+KULLANICI_VAR=$(grep -c "Mehmet" /tmp/asama3-bakiye.html || true)
+echo "HTTP Durum: ${HTTP_SONRA} (oturum korunuyor, sayfada kullanıcı eşleşmesi: ${KULLANICI_VAR})"
+echo "\$ docker compose exec -T redis redis-cli EXISTS 'oturum:<token>' (1 beklenir)"
+docker compose exec -T redis redis-cli EXISTS "$OTURUM_ANAHTAR"
+rm -f /tmp/asama3-bakiye.html
+
+echo
 echo "\$ POST /cikis (oturum anahtarı Redis'ten silinmeli)"
 curl -s -b "$COOKIE_OGR" -X POST -o /dev/null "${BASE}/cikis"
 echo "\$ docker compose exec -T redis redis-cli EXISTS 'oturum:<token>' (0 beklenir)"

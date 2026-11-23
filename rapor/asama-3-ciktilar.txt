@@ -5,40 +5,48 @@ PONG
 === 2. Menü Önbelleği: İlk İstek (Cache MISS -> DB Okuma -> Redis Kayıt) ===
 $ curl -s -o /dev/null -w '%{http_code}' 'http://localhost:8080/menu/gunun?yemekhane_id=1&tarih=2026-11-23&ogun_id=2'
 HTTP Durum: 200
-$ docker compose logs --since='2026-11-23T10:05:30+02:00' uygulama
+$ docker compose logs --since='2026-11-23T10:44:30+02:00' uygulama
 [DB OKUMA] menu:1:2026-11-23:2 replikadan çekiliyor...
-[REDIS KAYIT] menu:1:2026-11-23:2 TTL: 46468 sn
+[REDIS KAYIT] menu:1:2026-11-23:2 TTL: 44128 sn
 
 === 3. Redis Anahtar, TTL ve Sabit Veri Doğrulaması (bos_yer/ortalama_puan önbellekte yok) ===
 $ docker compose exec -T redis redis-cli KEYS 'menu:*'
+menu:1:2026-11-24:2
 menu:1:2026-11-23:2
 $ docker compose exec -T redis redis-cli TTL 'menu:1:2026-11-23:2'
-46464
+44127
 $ Redis değerinde dinamik alan (bos_yer / ortalama_puan) kontrolü:
-{"id":62,"yemekhane_id":1,"yemekhane":"Merkez Yemekhane","tarih":"2026-11-23","ogun_id":2,"ogun":"Öğle","rezervasyon_son":"2026-11-23 10:00:00","ogrenci_fiyati":40,"personel_fiyati":90,"toplamKalori":1240,"vejetaryen":false,"alerjenler":["Gluten","Süt","Yum...
+{"id":44,"yemekhane_id":1,"yemekhane":"Merkez Yemekhane","tarih":"2026-11-23","ogun_id":2,"ogun":"Öğle","rezervasyon_son":"2026-11-23 10:00:00","ogrenci_fiyati":40,"personel_fiyati":90,"toplamKalori":1110,"vejetaryen":false,"alerjenler":["Kereviz","Gluten","...
 OK: Yalnızca sabit menü verisi önbellekte (doluluk ve puan her istekte replikadan taze okunur).
 
 === 4. Menü Önbelleği: İkinci İstek (Cache HIT -> DB'ye Gitmeden Redis'ten Okuma) ===
 HTTP Durum: 200
-$ docker compose logs --since='2026-11-23T10:05:37+02:00' uygulama
+$ docker compose logs --since='2026-11-23T10:44:32+02:00' uygulama
 [REDIS ÖNBELLEK HIT] menu:1:2026-11-23:2
 
 === 5. Yönetici Menüyü Güncelleyince Eski Önbellek Kaydının Silinmesi (Cache Invalidation) ===
-$ POST /yonetici/menu/62/duzenle (yönetici güncellemesi)
+$ POST /yonetici/menu/44/duzenle (yönetici güncellemesi)
 HTTP Durum: 302
-$ docker compose logs --since='2026-11-23T10:05:44+02:00' uygulama
+$ docker compose logs --since='2026-11-23T10:44:33+02:00' uygulama
 [REDIS ÖNBELLEK SİLİNDİ] menu:1:2026-11-23:2
 $ docker compose exec -T redis redis-cli EXISTS 'menu:1:2026-11-23:2' (0 beklenir)
 0
 
 === 6. Redis Oturum Yönetimi: Giriş, 30 dk TTL, Sliding Expiration ve Çıkış ===
-Oluşan oturum anahtarı: oturum:966239c9-8d41-4... (kısaltıldı)
+Oluşan oturum anahtarı: oturum:0c50a75f-d13f-4... (kısaltıldı)
 $ docker compose exec -T redis redis-cli TTL 'oturum:<token>' (giriş anı, ~1800 sn)
-1799
+1800
 (4 saniye bekleniyor...)
-Bekleme sonrası TTL: 1794
+Bekleme sonrası TTL: 1796
 $ Yeni istek: GET /bakiye (her istekte TTL yenilenmeli)
-İstek sonrası yenilenen TTL: 1799
+İstek sonrası yenilenen TTL: 1800
+
+=== 7. Uygulama Container'ı Yeniden Başlasa Da Oturum Düşmüyor ===
+$ docker compose restart uygulama
+$ Restart sonrası aynı çerezle GET /bakiye (200 OK ve kullanıcı adı beklenir)
+HTTP Durum: 200 (oturum korunuyor, sayfada kullanıcı eşleşmesi: 1)
+$ docker compose exec -T redis redis-cli EXISTS 'oturum:<token>' (1 beklenir)
+1
 
 $ POST /cikis (oturum anahtarı Redis'ten silinmeli)
 $ docker compose exec -T redis redis-cli EXISTS 'oturum:<token>' (0 beklenir)
