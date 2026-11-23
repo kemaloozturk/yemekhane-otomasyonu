@@ -6,17 +6,36 @@ BASE="http://localhost:8080"
 COOKIE="/tmp/asama4-ogr.cookie"
 rm -f "$COOKIE"
 
-echo "=== 1. Çalışan Sistemde Migration Uygulaması ve Binlog Replikasyonu ==="
-echo "\$ Migration öncesi replika binlog konumu (mysql-replica):"
+echo "=== 1. Çalışan Sistemde Gerçek Migration (Aşama 3 -> Aşama 4) ve Binlog Replikasyonu ==="
+# Çalışan sistem sıfırdan kurulumda 04_degisiklik.sql'i otomatik çalıştırdığı için,
+# canlı migration'ın binlog ile replikaya gerçekten geçtiğini göstermek adına
+# yalnızca test ortamında Aşama 3 başlangıç durumunu (porsiyon ve kullanici_alerjenleri yok) hazırlıyoruz.
+docker compose exec -T mysql-primary mysql -uroot -pyemekhane_kok yemekhane -e "
+  DROP TABLE IF EXISTS kullanici_alerjenleri;
+  SET @v = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='yemekhane' AND TABLE_NAME='rezervasyonlar' AND COLUMN_NAME='porsiyon');
+  SET @s = IF(@v > 0, 'ALTER TABLE rezervasyonlar DROP COLUMN porsiyon', 'SELECT 1');
+  PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;
+" >/dev/null 2>&1
+sleep 1
+
+echo "\$ Migration ÖNCESİ replika durumu (Aşama 3 şeması — porsiyon sütunu ve kullanici_alerjenleri tablosu YOK):"
+docker compose exec -T mysql-replica mysql -uyemekhane_app -pUyg_2026 yemekhane \
+  -e "SELECT COUNT(*) AS porsiyon_sutunu_var_mi FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='yemekhane' AND TABLE_NAME='rezervasyonlar' AND COLUMN_NAME='porsiyon';
+      SELECT COUNT(*) AS alerjen_tablosu_var_mi FROM information_schema.TABLES WHERE TABLE_SCHEMA='yemekhane' AND TABLE_NAME='kullanici_alerjenleri';
+      SELECT COUNT(*) AS mevcut_rezervasyon_sayisi FROM rezervasyonlar;" 2>&1 | grep -v "Using a password"
+
+echo
+echo "\$ Migration ÖNCESİ replika binlog konumu (mysql-replica):"
 docker compose exec -T mysql-replica mysql -uroot -pyemekhane_kok \
   -e "SHOW REPLICA STATUS\G" 2>&1 | grep -E "Source_Log_File:|Read_Source_Log_Pos:|Exec_Source_Log_Pos:|Replica_IO_Running:|Replica_SQL_Running:"
 
 echo
-echo "\$ Çalışan mysql-primary üzerine db/init/04_degisiklik.sql uygulanıyor (idempotent migration):"
+echo "\$ Çalışan mysql-primary üzerine db/init/04_degisiklik.sql uygulanıyor:"
+echo "  docker compose exec -T mysql-primary mysql --default-character-set=utf8mb4 -uroot -p*** yemekhane < db/init/04_degisiklik.sql"
 docker compose exec -T mysql-primary mysql --default-character-set=utf8mb4 -uroot -pyemekhane_kok yemekhane < db/init/04_degisiklik.sql 2>&1 | grep -v "Using a password" || true
 sleep 1
 
-echo "\$ Migration sonrası replika binlog konumu (Exec_Source_Log_Pos ilerlemiş olmalı):"
+echo "\$ Migration SONRASI replika binlog konumu (ALTER TABLE + CREATE TABLE + CREATE PROCEDURE binlog ile replikaya geçti):"
 docker compose exec -T mysql-replica mysql -uroot -pyemekhane_kok \
   -e "SHOW REPLICA STATUS\G" 2>&1 | grep -E "Source_Log_File:|Read_Source_Log_Pos:|Exec_Source_Log_Pos:|Replica_IO_Running:|Replica_SQL_Running:"
 

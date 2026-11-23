@@ -1,22 +1,29 @@
-=== 1. Çalışan Sistemde Migration Uygulaması ve Binlog Replikasyonu ===
-$ Migration öncesi replika binlog konumu (mysql-replica):
-              Source_Log_File: mysql-bin.000004
-          Read_Source_Log_Pos: 8765
-        Relay_Source_Log_File: mysql-bin.000004
-           Replica_IO_Running: Yes
-          Replica_SQL_Running: Yes
-          Exec_Source_Log_Pos: 8765
+=== 1. Çalışan Sistemde Gerçek Migration (Aşama 3 -> Aşama 4) ve Binlog Replikasyonu ===
+$ Migration ÖNCESİ replika durumu (Aşama 3 şeması — porsiyon sütunu ve kullanici_alerjenleri tablosu YOK):
+porsiyon_sutunu_var_mi
+0
+alerjen_tablosu_var_mi
+0
+mevcut_rezervasyon_sayisi
+369
 
-$ Çalışan mysql-primary üzerine db/init/04_degisiklik.sql uygulanıyor (idempotent migration):
-1
-1
-$ Migration sonrası replika binlog konumu (Exec_Source_Log_Pos ilerlemiş olmalı):
+$ Migration ÖNCESİ replika binlog konumu (mysql-replica):
               Source_Log_File: mysql-bin.000004
-          Read_Source_Log_Pos: 14180
+          Read_Source_Log_Pos: 18758
         Relay_Source_Log_File: mysql-bin.000004
            Replica_IO_Running: Yes
           Replica_SQL_Running: Yes
-          Exec_Source_Log_Pos: 14180
+          Exec_Source_Log_Pos: 18758
+
+$ Çalışan mysql-primary üzerine db/init/04_degisiklik.sql uygulanıyor:
+  docker compose exec -T mysql-primary mysql --default-character-set=utf8mb4 -uroot -p*** yemekhane < db/init/04_degisiklik.sql
+$ Migration SONRASI replika binlog konumu (ALTER TABLE + CREATE TABLE + CREATE PROCEDURE binlog ile replikaya geçti):
+              Source_Log_File: mysql-bin.000004
+          Read_Source_Log_Pos: 24461
+        Relay_Source_Log_File: mysql-bin.000004
+           Replica_IO_Running: Yes
+          Replica_SQL_Running: Yes
+          Exec_Source_Log_Pos: 24461
 
 === 2. Replika Şema Doğrulaması (SHOW CREATE TABLE — mysql-replica) ===
 $ SHOW CREATE TABLE rezervasyonlar\G (mysql-replica)
@@ -27,7 +34,7 @@ Create Table: CREATE TABLE `rezervasyonlar` (
   `kullanici_id` int unsigned NOT NULL,
   `menu_id` int unsigned NOT NULL,
   `durum` enum('aktif','kullanildi','iptal') CHARACTER SET utf8mb4 COLLATE utf8mb4_tr_0900_ai_ci NOT NULL DEFAULT 'aktif',
-  `porsiyon` enum('tam','yarim') CHARACTER SET utf8mb4 COLLATE utf8mb4_tr_0900_ai_ci NOT NULL DEFAULT 'tam',
+  `porsiyon` enum('tam','yarim') COLLATE utf8mb4_tr_0900_ai_ci NOT NULL DEFAULT 'tam',
   `ucret` decimal(8,2) NOT NULL,
   `olusturma` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `kullanma_zamani` datetime DEFAULT NULL,
@@ -37,7 +44,7 @@ Create Table: CREATE TABLE `rezervasyonlar` (
   KEY `ix_rezervasyon_menu_durum` (`menu_id`,`durum`),
   CONSTRAINT `fk_rez_kullanici` FOREIGN KEY (`kullanici_id`) REFERENCES `kullanicilar` (`id`),
   CONSTRAINT `fk_rez_menu` FOREIGN KEY (`menu_id`) REFERENCES `menuler` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=370 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_tr_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=372 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_tr_0900_ai_ci
 
 $ SHOW CREATE TABLE kullanici_alerjenleri\G (mysql-replica)
 *************************** 1. row ***************************
@@ -54,15 +61,15 @@ Create Table: CREATE TABLE `kullanici_alerjenleri` (
 
 $ Mevcut rezervasyonların porsiyon dağılımı (test öncesi — hepsi 'tam' kalmış olmalı)
 porsiyon	adet
-tam	368
+tam	369
 
 === 3. Yarım Porsiyon (%60 Fiyat) Rezervasyon Canlı Testi ===
 Seçilen Öğle Menüsü: id=50, tarih=2026-11-24, tam öğrenci fiyatı=40.00 TL (beklenen %60: 24.00 TL)
 Yönlendirme (decode): Location: /menu/haftalik?mesaj=Rezervasyonunuz onaylandı. Çekilen tutar: 24.00 TL. Güncel bakiyeniz: 331.00 TL
 $ Replikadan yeni yarım porsiyon rezervasyon kaydı:
 id	menu_id	durum	porsiyon	ucret
-370	50	aktif	yarim	24.00
-(Test rezervasyonu #370 temizlik amaçlı iptal edildi ve ücret iade edildi.)
+372	50	aktif	yarim	24.00
+(Test rezervasyonu #372 temizlik amaçlı iptal edildi ve ücret iade edildi.)
 
 === 4. Kahvaltıda Yarım Porsiyon Engeli (SQLSTATE 45000) ===
 Seçilen Kahvaltı Menüsü: id=49, tarih=2026-11-24
@@ -79,9 +86,8 @@ Günün menüsü sayfasında tespit edilen kişisel alerjen uyarısı sayısı: 
 $ Temizlik öncesi menu:* anahtarları:
 menu:1:2026-11-23:3
 menu:1:2026-11-24:2
-menu:1:2026-11-23:2
 $ docker compose exec -T redis sh -c "redis-cli --scan --pattern 'menu:*' | xargs -r redis-cli DEL"
-3
+2
 $ Temizlik sonrası menu:* anahtarları (boş beklenir):
 
 
