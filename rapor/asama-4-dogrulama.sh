@@ -6,7 +6,22 @@ BASE="http://localhost:8080"
 COOKIE="/tmp/asama4-ogr.cookie"
 rm -f "$COOKIE"
 
-echo "=== 1. Replika Şema Doğrulaması (SHOW CREATE TABLE — mysql-replica) ==="
+echo "=== 1. Çalışan Sistemde Migration Uygulaması ve Binlog Replikasyonu ==="
+echo "\$ Migration öncesi replika binlog konumu (mysql-replica):"
+docker compose exec -T mysql-replica mysql -uroot -pyemekhane_kok \
+  -e "SHOW REPLICA STATUS\G" 2>&1 | grep -E "Source_Log_File:|Read_Source_Log_Pos:|Exec_Source_Log_Pos:|Replica_IO_Running:|Replica_SQL_Running:"
+
+echo
+echo "\$ Çalışan mysql-primary üzerine db/init/04_degisiklik.sql uygulanıyor (idempotent migration):"
+docker compose exec -T mysql-primary mysql --default-character-set=utf8mb4 -uroot -pyemekhane_kok yemekhane < db/init/04_degisiklik.sql 2>&1 | grep -v "Using a password" || true
+sleep 1
+
+echo "\$ Migration sonrası replika binlog konumu (Exec_Source_Log_Pos ilerlemiş olmalı):"
+docker compose exec -T mysql-replica mysql -uroot -pyemekhane_kok \
+  -e "SHOW REPLICA STATUS\G" 2>&1 | grep -E "Source_Log_File:|Read_Source_Log_Pos:|Exec_Source_Log_Pos:|Replica_IO_Running:|Replica_SQL_Running:"
+
+echo
+echo "=== 2. Replika Şema Doğrulaması (SHOW CREATE TABLE — mysql-replica) ==="
 echo "\$ SHOW CREATE TABLE rezervasyonlar\\G (mysql-replica)"
 docker compose exec -T mysql-replica mysql --default-character-set=utf8mb4 -uyemekhane_app -pUyg_2026 yemekhane \
   -e "SHOW CREATE TABLE rezervasyonlar\G" 2>&1 | grep -v "Using a password"
@@ -17,12 +32,12 @@ docker compose exec -T mysql-replica mysql --default-character-set=utf8mb4 -uyem
   -e "SHOW CREATE TABLE kullanici_alerjenleri\G" 2>&1 | grep -v "Using a password"
 
 echo
-echo "\$ Geçmiş rezervasyonların porsiyon dağılımı (hepsi 'tam' kalmış olmalı)"
+echo "\$ Mevcut rezervasyonların porsiyon dağılımı (test öncesi — hepsi 'tam' kalmış olmalı)"
 docker compose exec -T mysql-replica mysql -uyemekhane_app -pUyg_2026 yemekhane \
   -e "SELECT porsiyon, COUNT(*) AS adet FROM rezervasyonlar GROUP BY porsiyon;" 2>&1 | grep -v "Using a password"
 
 echo
-echo "=== 2. Yarım Porsiyon (%60 Fiyat) Rezervasyon Canlı Testi ==="
+echo "=== 3. Yarım Porsiyon (%60 Fiyat) Rezervasyon Canlı Testi ==="
 curl -s -c "$COOKIE" -d "eposta=mehmet.yildiz%40ogr.kampus.edu.tr&sifre=Yemek2026%21" -o /dev/null "${BASE}/giris"
 
 # Yarının öğle menüsünü bul (ogun_id = 2)
@@ -52,7 +67,7 @@ if [ -n "$REZ_ID" ]; then
 fi
 
 echo
-echo "=== 3. Kahvaltıda Yarım Porsiyon Engeli (SQLSTATE 45000) ==="
+echo "=== 4. Kahvaltıda Yarım Porsiyon Engeli (SQLSTATE 45000) ==="
 KAHVALTI_ID=$(docker compose exec -T mysql-replica mysql -N -uyemekhane_app -pUyg_2026 yemekhane \
   -e "SELECT id FROM menuler WHERE yemekhane_id=1 AND tarih='${YARIN}' AND ogun_id=1 LIMIT 1;" 2>/dev/null | tr -d '\r')
 echo "Seçilen Kahvaltı Menüsü: id=${KAHVALTI_ID}, tarih=${YARIN}"
@@ -62,7 +77,7 @@ LOC_KAH=$(curl -s -b "$COOKIE" -D - -o /dev/null \
 echo "Yönlendirme (decode): $(python3 -c "import urllib.parse, sys; print(urllib.parse.unquote(sys.argv[1]))" "$LOC_KAH")"
 
 echo
-echo "=== 4. Alerjen Tercihleri Kaydı ve Menüde Kişisel Uyarı Doğrulaması ==="
+echo "=== 5. Alerjen Tercihleri Kaydı ve Menüde Kişisel Uyarı Doğrulaması ==="
 # Gluten (id=1) ve Süt (id=2) kaydet
 curl -s -b "$COOKIE" -o /dev/null -d "alerjen_idler=1&alerjen_idler=2" "${BASE}/profil/alerjenler"
 sleep 1
@@ -78,7 +93,7 @@ curl -s -b "$COOKIE" -X POST -o /dev/null "${BASE}/cikis"
 rm -f "$COOKIE"
 
 echo
-echo "=== 5. Migration Sonrası Redis'teki Eski Menü Önbellek Kayıtlarının Temizlenmesi ==="
+echo "=== 6. Migration Sonrası Redis'teki Eski Menü Önbellek Kayıtlarının Temizlenmesi ==="
 echo "\$ Temizlik öncesi menu:* anahtarları:"
 docker compose exec -T redis redis-cli KEYS "menu:*"
 echo "\$ docker compose exec -T redis sh -c \"redis-cli --scan --pattern 'menu:*' | xargs -r redis-cli DEL\""

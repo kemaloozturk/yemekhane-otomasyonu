@@ -94,7 +94,7 @@ const html = `<!DOCTYPE html>
   </thead>
   <tbody>
     <tr><td><code>frontend</code></td><td>Apache 2.4 (<code>-D MVC</code>)</td><td>Statik varlıklar + 8080 portundan uygulamaya ters vekil</td></tr>
-    <tr><td><code>uygulama</code></td><td>Node.js 18 + Express + EJS</td><td>MVC uygulaması (8000 portu), ortam değişkenlerinden DB/Redis yapılandırması</td></tr>
+    <tr><td><code>uygulama</code></td><td>Node.js 22 + Express + EJS</td><td>MVC uygulaması (8000 portu), ortam değişkenlerinden DB/Redis yapılandırması</td></tr>
     <tr><td><code>mysql-primary</code></td><td>MySQL 8.4</td><td>Yazma sunucusu (<code>INSERT/UPDATE/DELETE</code>, <code>CALL sp_*</code>, işlem sonrası bakiye)</td></tr>
     <tr><td><code>mysql-replica</code></td><td>MySQL 8.4 (read-only)</td><td>Okuma sunucusu (listelemeler, raporlar, <code>v_menu_*</code> view'ları)</td></tr>
     <tr><td><code>replica-setup</code></td><td>MySQL 8.4</td><td>İlk açılışta replikasyonu kurar ve <code>Exited (0)</code> ile sonlanır</td></tr>
