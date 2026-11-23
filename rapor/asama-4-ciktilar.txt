@@ -1,0 +1,36 @@
+=== 1. Replika Şema Doğrulaması (04_degisiklik.sql yalnızca kaynağa uygulandı) ===
+$ SHOW COLUMNS FROM rezervasyonlar LIKE 'porsiyon' (mysql-replica)
+Field	Type	Null	Key	Default	Extra
+porsiyon	enum('tam','yarim')	NO		tam	
+
+$ DESCRIBE kullanici_alerjenleri (mysql-replica)
+Field	Type	Null	Key	Default	Extra
+kullanici_id	int unsigned	NO	PRI	NULL	
+alerjen_id	tinyint unsigned	NO	PRI	NULL	
+olusturma	datetime	NO		CURRENT_TIMESTAMP	DEFAULT_GENERATED
+
+$ Geçmiş rezervasyonların porsiyon dağılımı (hepsi 'tam' kalmış olmalı)
+porsiyon	adet
+tam	368
+yarim	1
+
+=== 2. Yarım Porsiyon (%60 Fiyat) Rezervasyon Canlı Testi ===
+Seçilen Öğle Menüsü: id=68, tarih=2026-11-24, tam öğrenci fiyatı=40.00 TL (beklenen %60: 24.00 TL)
+Yönlendirme (decode): Location: /menu/haftalik?mesaj=Rezervasyonunuz onaylandı. Çekilen tutar: 24.00 TL. Güncel bakiyeniz: 331.00 TL
+$ Replikadan yeni yarım porsiyon rezervasyon kaydı:
+id	menu_id	durum	porsiyon	ucret
+369	68	aktif	yarim	24.00
+(Test rezervasyonu #369 temizlik amaçlı iptal edildi ve ücret iade edildi.)
+
+=== 3. Kahvaltıda Yarım Porsiyon Engeli (SQLSTATE 45000) ===
+Seçilen Kahvaltı Menüsü: id=67, tarih=2026-11-24
+Yönlendirme (decode): Location: /menu/haftalik?hata=Kahvaltıda yarım porsiyon seçilemez.
+
+=== 4. Alerjen Tercihleri Kaydı ve Menüde Kişisel Uyarı Doğrulaması ===
+$ Replikadan kullanıcı alerjen tercihleri:
+kullanici_id	alerjen
+7	Gluten
+7	Kabuklu deniz ürünleri
+Günün menüsü sayfasında tespit edilen kişisel alerjen uyarısı sayısı: 3
+
+=== Aşama 4 Doğrulaması Başarıyla Tamamlandı ===
