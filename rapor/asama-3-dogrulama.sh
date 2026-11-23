@@ -52,7 +52,7 @@ echo "\$ docker compose logs --since='$ZAMAN_HIT' uygulama"
 docker compose logs --no-log-prefix --since="$ZAMAN_HIT" uygulama | grep -E "DB OKUMA|REDIS" || true
 
 echo
-echo "=== 5. Yönetici Menüyü Güncelleyince Eski Önbellek Kaydının Silinmesi (Cache Invalidation) ==="
+echo "=== 5. Yönetici Menüyü Güncelleyince Eski Önbelleğin Silinmesi ve Arayüzde Yeni Menünün Görünmesi ==="
 # Bugünkü menünün ID'sini ve mevcut yemeklerini al
 MENU_ID=$(docker compose exec -T mysql-replica mysql -N -uyemekhane_app -pUyg_2026 yemekhane \
   -e "SELECT id FROM menuler WHERE yemekhane_id=${YEMEKHANE_ID} AND tarih='${TARIH}' AND ogun_id=${OGUN_ID} LIMIT 1;" 2>/dev/null | tr -d '\r')
@@ -62,12 +62,14 @@ OGR_FIYAT=$(docker compose exec -T mysql-replica mysql -N -uyemekhane_app -pUyg_
   -e "SELECT ogrenci_fiyati FROM menuler WHERE id=${MENU_ID};" 2>/dev/null | tr -d '\r')
 PER_FIYAT=$(docker compose exec -T mysql-replica mysql -N -uyemekhane_app -pUyg_2026 yemekhane \
   -e "SELECT personel_fiyati FROM menuler WHERE id=${MENU_ID};" 2>/dev/null | tr -d '\r')
+YENI_OGR_FIYAT=$(awk "BEGIN{printf \"%.2f\", ${OGR_FIYAT} + 2}")
 
+echo "Güncelleme öncesi öğrenci fiyatı (arayüz): $(curl -s "${BASE}/menu/gunun?yemekhane_id=${YEMEKHANE_ID}&tarih=${TARIH}&ogun_id=${OGUN_ID}" | grep -oE '₺[0-9]+\.[0-9]{2} / ₺[0-9]+\.[0-9]{2}' | head -1)"
 curl -s -c "$COOKIE_ADMIN" -d "eposta=leyla.arslan%40kampus.edu.tr&sifre=Yemek2026%21" -o /dev/null "${BASE}/giris"
 ZAMAN_INV=$(date -Iseconds)
-echo "\$ POST /yonetici/menu/${MENU_ID}/duzenle (yönetici güncellemesi)"
+echo "\$ POST /yonetici/menu/${MENU_ID}/duzenle (öğrenci fiyatı ${OGR_FIYAT} -> ${YENI_OGR_FIYAT} TL)"
 KOD_UPD=$(curl -s -b "$COOKIE_ADMIN" -o /dev/null -w "%{http_code}" \
-  -d "yemekhane_id=${YEMEKHANE_ID}&tarih=${TARIH}&ogun_id=${OGUN_ID}&ogrenci_fiyati=${OGR_FIYAT}&personel_fiyati=${PER_FIYAT}${YEMEK_PARAMS}" \
+  -d "yemekhane_id=${YEMEKHANE_ID}&tarih=${TARIH}&ogun_id=${OGUN_ID}&ogrenci_fiyati=${YENI_OGR_FIYAT}&personel_fiyati=${PER_FIYAT}${YEMEK_PARAMS}" \
   "${BASE}/yonetici/menu/${MENU_ID}/duzenle")
 echo "HTTP Durum: $KOD_UPD"
 sleep 1
@@ -75,6 +77,19 @@ echo "\$ docker compose logs --since='$ZAMAN_INV' uygulama"
 docker compose logs --no-log-prefix --since="$ZAMAN_INV" uygulama | grep -E "ÖNBELLEK SİLİNDİ|REDIS" || true
 echo "\$ docker compose exec -T redis redis-cli EXISTS '$ANAHTAR' (0 beklenir)"
 docker compose exec -T redis redis-cli EXISTS "$ANAHTAR"
+
+echo "\$ Güncelleme sonrası arayüz isteği (GET /menu/gunun -> yeni fiyat görünmeli ve Redis'e yeniden yazılmalı):"
+ZAMAN_YENI=$(date -Iseconds)
+YENI_ARAYUZ_FIYAT=$(curl -s "${BASE}/menu/gunun?yemekhane_id=${YEMEKHANE_ID}&tarih=${TARIH}&ogun_id=${OGUN_ID}" | grep -oE '₺[0-9]+\.[0-9]{2} / ₺[0-9]+\.[0-9]{2}' | head -1)
+echo "Güncelleme sonrası öğrenci/personel fiyatı (arayüz): ${YENI_ARAYUZ_FIYAT}"
+sleep 1
+docker compose logs --no-log-prefix --since="$ZAMAN_YENI" uygulama | grep -E "DB OKUMA|REDIS KAYIT" || true
+
+# Örnek veriyi bozmamak için fiyatı eski haline döndür
+curl -s -b "$COOKIE_ADMIN" -o /dev/null \
+  -d "yemekhane_id=${YEMEKHANE_ID}&tarih=${TARIH}&ogun_id=${OGUN_ID}&ogrenci_fiyati=${OGR_FIYAT}&personel_fiyati=${PER_FIYAT}${YEMEK_PARAMS}" \
+  "${BASE}/yonetici/menu/${MENU_ID}/duzenle"
+echo "(Örnek veri tutarlılığı için fiyat tekrar ${OGR_FIYAT} TL yapıldı.)"
 
 # Yönetici çıkış
 curl -s -b "$COOKIE_ADMIN" -X POST -o /dev/null "${BASE}/cikis"

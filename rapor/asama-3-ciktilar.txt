@@ -5,35 +5,41 @@ PONG
 === 2. Menü Önbelleği: İlk İstek (Cache MISS -> DB Okuma -> Redis Kayıt) ===
 $ curl -s -o /dev/null -w '%{http_code}' 'http://localhost:8080/menu/gunun?yemekhane_id=1&tarih=2026-11-23&ogun_id=2'
 HTTP Durum: 200
-$ docker compose logs --since='2026-11-23T10:44:30+02:00' uygulama
+$ docker compose logs --since='2026-11-23T10:51:53+02:00' uygulama
 [DB OKUMA] menu:1:2026-11-23:2 replikadan çekiliyor...
-[REDIS KAYIT] menu:1:2026-11-23:2 TTL: 44128 sn
+[REDIS KAYIT] menu:1:2026-11-23:2 TTL: 43685 sn
 
 === 3. Redis Anahtar, TTL ve Sabit Veri Doğrulaması (bos_yer/ortalama_puan önbellekte yok) ===
 $ docker compose exec -T redis redis-cli KEYS 'menu:*'
-menu:1:2026-11-24:2
 menu:1:2026-11-23:2
 $ docker compose exec -T redis redis-cli TTL 'menu:1:2026-11-23:2'
-44127
+43684
 $ Redis değerinde dinamik alan (bos_yer / ortalama_puan) kontrolü:
 {"id":44,"yemekhane_id":1,"yemekhane":"Merkez Yemekhane","tarih":"2026-11-23","ogun_id":2,"ogun":"Öğle","rezervasyon_son":"2026-11-23 10:00:00","ogrenci_fiyati":40,"personel_fiyati":90,"toplamKalori":1110,"vejetaryen":false,"alerjenler":["Kereviz","Gluten","...
 OK: Yalnızca sabit menü verisi önbellekte (doluluk ve puan her istekte replikadan taze okunur).
 
 === 4. Menü Önbelleği: İkinci İstek (Cache HIT -> DB'ye Gitmeden Redis'ten Okuma) ===
 HTTP Durum: 200
-$ docker compose logs --since='2026-11-23T10:44:32+02:00' uygulama
+$ docker compose logs --since='2026-11-23T10:51:54+02:00' uygulama
 [REDIS ÖNBELLEK HIT] menu:1:2026-11-23:2
 
-=== 5. Yönetici Menüyü Güncelleyince Eski Önbellek Kaydının Silinmesi (Cache Invalidation) ===
-$ POST /yonetici/menu/44/duzenle (yönetici güncellemesi)
+=== 5. Yönetici Menüyü Güncelleyince Eski Önbelleğin Silinmesi ve Arayüzde Yeni Menünün Görünmesi ===
+Güncelleme öncesi öğrenci fiyatı (arayüz): ₺40.00 / ₺90.00
+$ POST /yonetici/menu/44/duzenle (öğrenci fiyatı 40.00 -> 42.00 TL)
 HTTP Durum: 302
-$ docker compose logs --since='2026-11-23T10:44:33+02:00' uygulama
+$ docker compose logs --since='2026-11-23T10:51:56+02:00' uygulama
+[REDIS ÖNBELLEK HIT] menu:1:2026-11-23:2
 [REDIS ÖNBELLEK SİLİNDİ] menu:1:2026-11-23:2
 $ docker compose exec -T redis redis-cli EXISTS 'menu:1:2026-11-23:2' (0 beklenir)
 0
+$ Güncelleme sonrası arayüz isteği (GET /menu/gunun -> yeni fiyat görünmeli ve Redis'e yeniden yazılmalı):
+Güncelleme sonrası öğrenci/personel fiyatı (arayüz): ₺42.00 / ₺90.00
+[DB OKUMA] menu:1:2026-11-23:2 replikadan çekiliyor...
+[REDIS KAYIT] menu:1:2026-11-23:2 TTL: 43681 sn
+(Örnek veri tutarlılığı için fiyat tekrar 40.00 TL yapıldı.)
 
 === 6. Redis Oturum Yönetimi: Giriş, 30 dk TTL, Sliding Expiration ve Çıkış ===
-Oluşan oturum anahtarı: oturum:0c50a75f-d13f-4... (kısaltıldı)
+Oluşan oturum anahtarı: oturum:d7c4c11d-39e4-4... (kısaltıldı)
 $ docker compose exec -T redis redis-cli TTL 'oturum:<token>' (giriş anı, ~1800 sn)
 1800
 (4 saniye bekleniyor...)
