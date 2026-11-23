@@ -6,6 +6,7 @@
 -- Doğrulama (Replika):
 --   docker compose exec mysql-replica mysql -uyemekhane_app -pUyg_2026 yemekhane -e "SHOW CREATE TABLE rezervasyonlar\G SHOW CREATE TABLE kullanici_alerjenleri\G"
 -- =====================================================================
+SET NAMES utf8mb4;
 USE yemekhane;
 
 -- 1. Rezervasyonlar tablosuna porsiyon sütunu eklenmesi (geçmiş kayıtlar 'tam' kalır)
