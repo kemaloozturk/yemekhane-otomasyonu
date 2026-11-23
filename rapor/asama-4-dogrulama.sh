@@ -6,15 +6,15 @@ BASE="http://localhost:8080"
 COOKIE="/tmp/asama4-ogr.cookie"
 rm -f "$COOKIE"
 
-echo "=== 1. Replika Şema Doğrulaması (04_degisiklik.sql yalnızca kaynağa uygulandı) ==="
-echo "\$ SHOW COLUMNS FROM rezervasyonlar LIKE 'porsiyon' (mysql-replica)"
-docker compose exec -T mysql-replica mysql -uyemekhane_app -pUyg_2026 yemekhane \
-  -e "SHOW COLUMNS FROM rezervasyonlar LIKE 'porsiyon';" 2>&1 | grep -v "Using a password"
+echo "=== 1. Replika Şema Doğrulaması (SHOW CREATE TABLE — mysql-replica) ==="
+echo "\$ SHOW CREATE TABLE rezervasyonlar\\G (mysql-replica)"
+docker compose exec -T mysql-replica mysql --default-character-set=utf8mb4 -uyemekhane_app -pUyg_2026 yemekhane \
+  -e "SHOW CREATE TABLE rezervasyonlar\G" 2>&1 | grep -v "Using a password"
 
 echo
-echo "\$ DESCRIBE kullanici_alerjenleri (mysql-replica)"
-docker compose exec -T mysql-replica mysql -uyemekhane_app -pUyg_2026 yemekhane \
-  -e "DESCRIBE kullanici_alerjenleri;" 2>&1 | grep -v "Using a password"
+echo "\$ SHOW CREATE TABLE kullanici_alerjenleri\\G (mysql-replica)"
+docker compose exec -T mysql-replica mysql --default-character-set=utf8mb4 -uyemekhane_app -pUyg_2026 yemekhane \
+  -e "SHOW CREATE TABLE kullanici_alerjenleri\G" 2>&1 | grep -v "Using a password"
 
 echo
 echo "\$ Geçmiş rezervasyonların porsiyon dağılımı (hepsi 'tam' kalmış olmalı)"
@@ -76,6 +76,15 @@ echo "Günün menüsü sayfasında tespit edilen kişisel alerjen uyarısı say�
 # Çıkış
 curl -s -b "$COOKIE" -X POST -o /dev/null "${BASE}/cikis"
 rm -f "$COOKIE"
+
+echo
+echo "=== 5. Migration Sonrası Redis'teki Eski Menü Önbellek Kayıtlarının Temizlenmesi ==="
+echo "\$ Temizlik öncesi menu:* anahtarları:"
+docker compose exec -T redis redis-cli KEYS "menu:*"
+echo "\$ docker compose exec -T redis sh -c \"redis-cli --scan --pattern 'menu:*' | xargs -r redis-cli DEL\""
+docker compose exec -T redis sh -c "redis-cli --scan --pattern 'menu:*' | xargs -r redis-cli DEL"
+echo "\$ Temizlik sonrası menu:* anahtarları (boş beklenir):"
+docker compose exec -T redis redis-cli KEYS "menu:*"
 
 echo
 echo "=== Aşama 4 Doğrulaması Başarıyla Tamamlandı ==="
