@@ -69,10 +69,11 @@
 </div>
 
 <script>
-// Tarih varsayılanı olarak yarını seçelim
+// Tarih varsayılanı olarak yarını seçelim (yerel saat dilimine göre)
 const yarin = new Date();
 yarin.setDate(yarin.getDate() + 1);
-document.getElementById('tarih').value = yarin.toISOString().slice(0, 10);
+document.getElementById('tarih').value =
+  yarin.getFullYear() + '-' + String(yarin.getMonth() + 1).padStart(2, '0') + '-' + String(yarin.getDate()).padStart(2, '0');
 </script>
 
 <%- include('../partials/footer') %>

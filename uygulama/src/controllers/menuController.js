@@ -1,10 +1,11 @@
 const menuRepository = require('../repositories/menuRepository');
 const rezervasyonRepository = require('../repositories/rezervasyonRepository');
 const kullaniciRepository = require('../repositories/kullaniciRepository');
+const { rolFiyati, yarimPorsiyonFiyati } = require('../utils/fiyatYardimcisi');
 
-// Bugünün tarihini YYYY-MM-DD olarak döndürür
-function bugununTarihi() {
-  const d = new Date();
+// Verilen tarihi yerel saat dilimine göre YYYY-MM-DD olarak döndürür
+// (toISOString UTC kullandığı için gece yarısı civarında bir gün kayabilir)
+function bugununTarihi(d = new Date()) {
   const yil = d.getFullYear();
   const ay = String(d.getMonth() + 1).padStart(2, '0');
   const gun = String(d.getDate()).padStart(2, '0');
@@ -28,6 +29,14 @@ async function gununMenusu(req, res) {
     const secilenOgunId = Number(req.query.ogun_id || varsayilanOgun);
 
     const menu = await menuRepository.gununMenusu(secilenYemekhaneId, secilenTarih, secilenOgunId);
+
+    // Kullanıcının rolüne göre gösterilecek fiyatlar (görünümde iş kuralı olmaması için burada hazırlanır)
+    if (menu) {
+      const rol = req.kullanici ? req.kullanici.rol : 'ogrenci';
+      menu.kullanici_fiyati = rolFiyati(rol, menu.ogrenci_fiyati, menu.personel_fiyati);
+      menu.yarim_fiyat = yarimPorsiyonFiyati(menu.kullanici_fiyati);
+      menu.yarim_porsiyon_secilebilir = Number(menu.ogun_id) !== 1;
+    }
 
     // Kullanıcı giriş yapmışsa bu menü için rezervasyonunu ve alerjenlerini kontrol et
     let kullaniciRezervasyonu = null;
@@ -70,10 +79,17 @@ async function haftalikMenu(req, res) {
     const bitis = new Date();
     bitis.setDate(bitis.getDate() + 7);
 
-    const baslangicStr = baslangic.toISOString().slice(0, 10);
-    const bitisStr = bitis.toISOString().slice(0, 10);
+    const baslangicStr = bugununTarihi(baslangic);
+    const bitisStr = bugununTarihi(bitis);
 
     const menuler = await menuRepository.haftalikMenuler(secilenYemekhaneId, baslangicStr, bitisStr);
+
+    // Rol bazlı fiyat ve yarım porsiyon uygunluğu (görünümde iş kuralı olmaması için)
+    const rol = req.kullanici ? req.kullanici.rol : 'ogrenci';
+    for (const m of menuler) {
+      m.kullanici_fiyati = rolFiyati(rol, m.ogrenci_fiyati, m.personel_fiyati);
+      m.yarim_porsiyon_secilebilir = Number(m.ogun_id) !== 1;
+    }
 
     let aktifMenuIdleri = {};
     if (req.kullanici) {

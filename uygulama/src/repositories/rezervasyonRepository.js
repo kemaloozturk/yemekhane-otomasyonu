@@ -58,6 +58,7 @@ async function kullaniciRezervasyonlari(kullaniciId) {
        r.iptal_zamani,
        r.kullanma_zamani,
        m.tarih,
+       m.yemekhane_id,
        yh.ad AS yemekhane,
        o.ad AS ogun,
        TIMESTAMP(m.tarih, o.son_saat) AS rezervasyon_son,

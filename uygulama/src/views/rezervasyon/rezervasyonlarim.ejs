@@ -63,7 +63,7 @@
 
                 <% if (locals.kullanici && locals.kullanici.rol === 'yonetici') { %>
                   <form action="/turnike/gecis" method="POST" style="margin: 0; display: inline-block; margin-left: 0.3rem;">
-                    <input type="hidden" name="yemekhane_id" value="<%= r.yemekhane.includes('Mühendislik') ? 2 : 1 %>">
+                    <input type="hidden" name="yemekhane_id" value="<%= r.yemekhane_id %>">
                     <button type="submit" class="dugme dugme-ikincil dugme-kucuk" title="Turnikeden geçişi kaydeder (Durumu 'kullanildi' yapar)">Turnikeden Geç</button>
                   </form>
                 <% } %>

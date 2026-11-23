@@ -34,7 +34,7 @@
       <tbody>
         <% menuler.forEach(m => { %>
           <% const rezerveDurumu = aktifMenuIdleri[m.menu_id]; %>
-          <% const kullaniciUcret = locals.kullanici ? (locals.kullanici.rol === 'ogrenci' ? m.ogrenci_fiyati : m.personel_fiyati) : m.ogrenci_fiyati; %>
+          <% const kullaniciUcret = m.kullanici_fiyati; %>
           <tr>
             <td>
               <strong><%= m.tarih %></strong>
@@ -71,7 +71,7 @@
                 <form action="/rezervasyon/yap" method="POST" style="margin: 0; display: flex; flex-direction: column; gap: 0.25rem;">
                   <input type="hidden" name="menu_id" value="<%= m.menu_id %>">
                   <input type="hidden" name="donus_url" value="/menu/haftalik?yemekhane_id=<%= secilenYemekhaneId %>">
-                  <% if (m.ogun_id !== 1) { %>
+                  <% if (m.yarim_porsiyon_secilebilir) { %>
                     <label style="font-size: 0.75rem; margin: 0; font-weight: normal; cursor: pointer;">
                       <input type="checkbox" name="yarim_porsiyon" value="1" style="width: auto;"> Yarım (%60)
                     </label>
